@@ -9,10 +9,10 @@ import           Test.Tasty.QuickCheck as QC
 import           Day1
 
 testPart1 :: Assertion
-testPart1 = assertEqual "" 1009899 =<< part1 <$> getInput
+testPart1 = assertEqual "" 1009899 . part1 =<< getInput
 
 testPart2 :: Assertion
-testPart2 = assertEqual "" 44211152 =<< part2 <$> getInput
+testPart2 = assertEqual "" 44211152 . part2 =<< getInput
 
 tests :: [TestTree]
 tests = [
