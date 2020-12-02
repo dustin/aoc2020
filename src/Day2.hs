@@ -25,17 +25,17 @@ getInput = parseFile (many parsePW)
 
 isValid :: PW -> Bool
 isValid (PW (Policy l h c) p) = cnt >= l && cnt <= h
-  where cnt = length . filter (== c) $ p
+  where cnt = countIf (== c) p
 
 isValid2 :: PW -> Bool
 isValid2 (PW (Policy l h c) p) = (p !! (l - 1) == c) `xor` (p !! (h - 1) == c)
   where xor = (/=)
 
-validateWith :: (PW -> Bool) -> [PW] -> Int
-validateWith f = length . filter f
+countIf :: (a -> Bool) -> [a] -> Int
+countIf f = length . filter f
 
 part1 :: [PW] -> Int
-part1 = validateWith isValid
+part1 = countIf isValid
 
 part2 :: [PW] -> Int
-part2 = validateWith isValid2
+part2 = countIf isValid2
