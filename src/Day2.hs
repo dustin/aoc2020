@@ -11,31 +11,23 @@ data Policy = Policy Int Int Char deriving Show
 
 data PW = PW Policy String deriving Show
 
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme space
-
-parsePolicy :: Parser Policy
-parsePolicy = Policy <$> decimal <* "-" <*> lexeme decimal <*> L.charLiteral
-
 parsePW :: Parser PW
 parsePW = PW <$> parsePolicy <* lexeme ":" <*> lexeme (manyTill L.charLiteral (char '\n'))
+  where parsePolicy = Policy <$> decimal <* "-" <*> lexeme decimal <*> L.charLiteral
+        lexeme = L.lexeme space
 
 getInput :: FilePath -> IO [PW]
 getInput = parseFile (many parsePW)
-
-isValid :: PW -> Bool
-isValid (PW (Policy l h c) p) = cnt >= l && cnt <= h
-  where cnt = countIf (== c) p
-
-isValid2 :: PW -> Bool
-isValid2 (PW (Policy l h c) p) = (p !! (l - 1) == c) `xor` (p !! (h - 1) == c)
-  where xor = (/=)
 
 countIf :: (a -> Bool) -> [a] -> Int
 countIf f = length . filter f
 
 part1 :: [PW] -> Int
-part1 = countIf isValid
+part1 = countIf valid
+  where valid (PW (Policy l h c) p) = cnt >= l && cnt <= h
+          where cnt = countIf (== c) p
 
 part2 :: [PW] -> Int
-part2 = countIf isValid2
+part2 = countIf valid
+  where valid (PW (Policy l h c) p) = (p !! (l - 1) == c) `xor` (p !! (h - 1) == c)
+        xor = (/=)
