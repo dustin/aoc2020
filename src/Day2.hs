@@ -32,7 +32,7 @@ isValid2 (PW (Policy l h c) p) = (p !! (l - 1) == c) `xor` (p !! (h - 1) == c)
   where xor = (/=)
 
 validateWith :: (PW -> Bool) -> [PW] -> Int
-validateWith f = length . filter id . fmap f
+validateWith f = length . filter f
 
 part1 :: [PW] -> Int
 part1 = validateWith isValid
