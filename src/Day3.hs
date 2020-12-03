@@ -9,12 +9,6 @@ import           Advent.Vis
 
 newtype World = World (Map Point Char) deriving (Show)
 
-instance Bounded2D World where
-  bounds2d (World m) = bounds2d m
-
-display :: World -> String
-display (World m) = drawString m (mapCharFun m id)
-
 getInput :: FilePath -> IO World
 getInput fn = parseInput <$> readFile fn
 
