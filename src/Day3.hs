@@ -7,7 +7,6 @@ import qualified Data.Map.Strict as Map
 
 import           Advent.AoC
 import           Advent.TwoD
-import           Advent.Vis
 
 type World = Map Point Int
 
@@ -18,8 +17,8 @@ getInput fn = parseGrid (\case '#' -> 1; _ -> 0) <$> readFile fn
 trees :: World -> (Int, Int) -> Int
 trees m (xoff,yoff) = sum . fmap at $ slope
   where
-    (_, (maxx, maxy)) = bounds2d m
-    at (x,y) = m Map.! (x `mod` (maxx+1), y `mod` (maxy+1))
+    ((maxx, maxy),_) = Map.findMax m
+    at (x,y) = m Map.! (x `mod` (maxx+1), y)
     slope = takeWhile ((<= maxy) . snd) [(i*xoff, i*yoff) | i <- [0..]]
 
 part1 :: World -> Int
