@@ -18,7 +18,7 @@ trees m (xoff,yoff) = length . filter (== '#') . fmap at $ slope
   where
     (_, (maxx, maxy)) = bounds2d m
     at (x,y) = m Map.! (x `mod` (maxx+1), y `mod` (maxy+1))
-    slope = takeWhile (\(_,y) -> y <= maxy) [(i*xoff, i*yoff) | i <- [0..]]
+    slope = takeWhile ((<= maxy) . snd) [(i*xoff, i*yoff) | i <- [0..]]
 
 part1 :: World -> Int
 part1 w = trees w (3,1)
