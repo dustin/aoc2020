@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Day3 where
 
 import           Data.Map.Strict (Map)
@@ -7,14 +9,14 @@ import           Advent.AoC
 import           Advent.TwoD
 import           Advent.Vis
 
-type World = Map Point Char
+type World = Map Point Int
 
 getInput :: FilePath -> IO World
-getInput fn = parseGrid id <$> readFile fn
+getInput fn = parseGrid (\case '#' -> 1; _ -> 0) <$> readFile fn
 
 -- Count the trees along a given slope.
 trees :: World -> (Int, Int) -> Int
-trees m (xoff,yoff) = length . filter (== '#') . fmap at $ slope
+trees m (xoff,yoff) = sum . fmap at $ slope
   where
     (_, (maxx, maxy)) = bounds2d m
     at (x,y) = m Map.! (x `mod` (maxx+1), y `mod` (maxy+1))
