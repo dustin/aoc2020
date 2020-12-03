@@ -7,20 +7,17 @@ import           Advent.AoC
 import           Advent.TwoD
 import           Advent.Vis
 
-newtype World = World (Map Point Char) deriving (Show)
+type World = Map Point Char
 
 getInput :: FilePath -> IO World
-getInput fn = parseInput <$> readFile fn
-
-parseInput :: String -> World
-parseInput = World . parseGrid id
+getInput fn = parseGrid id <$> readFile fn
 
 -- All of the positions on a slope limited by the given y value.
 slope :: Int -> (Int,Int) -> [(Int,Int)]
 slope maxy (xoff, yoff) = takeWhile (\(_,y) -> y <= maxy) [(i*xoff, i*yoff) | i <- [0..]]
 
 trees :: World -> (Int, Int) -> Int
-trees (World m) s = length . filter (== '#') . fmap at $ slope maxy s
+trees m s = length . filter (== '#') . fmap at $ slope maxy s
   where
     (_, (maxx, maxy)) = bounds2d m
     at (x,y) = m Map.! (x `mod` (maxx+1), y `mod` (maxy+1))
