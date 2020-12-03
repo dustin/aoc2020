@@ -21,27 +21,18 @@ getInput fn = parseInput <$> readFile fn
 parseInput :: String -> World
 parseInput = World . parseGrid id
 
-at :: World -> (Int, Int) -> Char
-at (World m) (x,y) = ans
-  where ans = m Map.! (ex x, why y)
-        ex x'
-          | x' > maxx = ex (x' - (maxx+1))
-          | otherwise = x'
-        why y'
-          | y' > maxy = ex (y' - (maxy+1))
-          | otherwise = y'
-        (_, (maxx, maxy)) = bounds2d m
-
+-- All of the positions on a slope limited by the given y value.
 slope :: Int -> (Int,Int) -> [(Int,Int)]
 slope maxy (xoff, yoff) = takeWhile (\(_,y) -> y <= maxy) [(i*xoff, i*yoff) | i <- [0..]]
 
 trees :: World -> (Int, Int) -> Int
-trees w@(World m) s = length . filter (== '#') . fmap (at w) $ slope maxy s
+trees (World m) s = length . filter (== '#') . fmap at $ slope maxy s
   where
-    (_, (_, maxy)) = bounds2d m
+    (_, (maxx, maxy)) = bounds2d m
+    at (x,y) = m Map.! (x `mod` (maxx+1), y `mod` (maxy+1))
 
 part1 :: World -> Int
 part1 w = trees w (3,1)
 
 part2 :: World -> Int
-part2 w = foldr (\x -> (trees w x *)) 1 [(1,1), (3,1), (5, 1), (7, 1), (1, 2)]
+part2 w = product . fmap (trees w) $ [(1,1), (3,1), (5, 1), (7, 1), (1, 2)]
