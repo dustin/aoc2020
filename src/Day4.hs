@@ -1,27 +1,22 @@
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Day4 where
 
 import           Control.Applicative        (liftA2, (<|>))
 import           Control.Lens
 import           Data.Char                  (isDigit, isHexDigit, isSpace)
-import           Data.Maybe                 (isJust)
-import           Data.Text                  (Text, pack, unpack)
+import           Data.Maybe                 (catMaybes)
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
 import           Text.Megaparsec            (endBy, many, option, satisfy, sepBy)
 import           Text.Megaparsec.Char.Lexer (decimal)
 
 import           Advent.AoC
+import           Advent.Search
 
-{-
-byr (Birth Year)
-iyr (Issue Year)
-eyr (Expiration Year)
-hgt (Height)
-hcl (Hair Color)
-ecl (Eye Color)
-pid (Passport ID)
-cid (Country ID)
--}
+data Color = Amb | Blu | Brn | Gry | Grn | Hzl | Oth | InvalidColor deriving (Show, Eq)
 
 data Feature = BirthYear Int
              | IssueYear Int
@@ -33,11 +28,27 @@ data Feature = BirthYear Int
              | Country Int
              deriving Show
 
-data Color = Amb | Blu | Brn | Gry | Grn | Hzl | Oth | InvalidColor deriving Show
-
 makePrisms ''Feature
 
-type Passport = [Feature]
+data Passport = Passport {
+  _birthYear    :: Int
+  , _issueYear  :: Int
+  , _expiration :: Int
+  , _height     :: (Int, Text)
+  , _hairColor  :: Text
+  , _eyeColor   :: Color
+  , _pid        :: Text
+  } deriving Show
+
+parsePassport :: Parser (Maybe Passport)
+parsePassport = parseFeatures >>= \fs ->
+  pure $ Passport <$> (fs ^? folded . _BirthYear)
+    <*> (fs ^? folded . _IssueYear)
+    <*> (fs ^? folded . _Expiration)
+    <*> (fs ^? folded . _Height)
+    <*> (fs ^? folded . _HairColor)
+    <*> (fs ^? folded . _EyeColor)
+    <*> (fs ^? folded . _PID)
 
 parseFeature :: Parser Feature
 parseFeature = BirthYear <$> ("byr:" *> decimal)
@@ -60,15 +71,18 @@ parseFeature = BirthYear <$> ("byr:" *> decimal)
                <|> Oth <$ "oth"
                <|> InvalidColor <$ someText
 
-isValid :: Passport -> Bool
-isValid x = and [isJust (x ^? folded . _BirthYear),
-                isJust (x ^? folded . _IssueYear),
-                isJust (x ^? folded . _Expiration),
-                isJust (x ^? folded . _Height),
-                isJust (x ^? folded . _HairColor),
-                isJust (x ^? folded . _EyeColor),
-                isJust (x ^? folded . _PID)
-                ]
+parseFeatures :: Parser [Feature]
+parseFeatures = parseFeature `endBy` satisfy isSpace
+
+someText :: Parser Text
+someText = T.pack <$> many (satisfy (not . (`elem` [' ', '\n'])))
+
+getInput :: FilePath -> IO [Passport]
+getInput = fmap catMaybes . parseFile (parsePassport `sepBy` "\n")
+
+part1 :: [Passport] -> Int
+part1 = length
+
 
 {-
 byr (Birth Year) - four digits; at least 1920 and at most 2002.
@@ -82,48 +96,21 @@ ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
 pid (Passport ID) - a nine-digit number, including leading zeroes.
 cid (Country ID) - ignored, missing or not.
 -}
-
-isValid2 :: Passport -> Bool
-isValid2 p = and [validBirthYear (p ^? folded . _BirthYear),
-                  validIssueYear (p ^? folded . _IssueYear),
-                  validExp (p ^? folded . _Expiration),
-                  validHeight (p ^? folded . _Height),
-                  validHairColor (p ^? folded . _HairColor),
-                  validEyeColor (p ^? folded . _EyeColor),
-                  validPID (p ^? folded . _PID)
-                ]
-  where validBirthYear = range 1920 2002
-        validIssueYear = range 2010 2020
-        validExp = range 2020 2030
-        validHeight (Just (x, "in")) = x >= 59 && x <= 76
-        validHeight (Just (x, "cm")) = x >= 150 && x <= 193
-        validHeight _                = False
-        validHairColor (Just "") = False
-        validHairColor (Just x)
-          | matches (unpack x) = True
-          where matches ('#':xs) = length xs == 6 && all isHexDigit xs
-                matches _        = False
-        validHairColor _        = False
-        validEyeColor (Just InvalidColor) = False
-        validEyeColor (Just _)            = True
-        validEyeColor _                   = False
-        validPID (Just x) = let xs = unpack x in length xs == 9 && all isDigit xs
-        validPID _        = False
-
-        range l h (Just x) = x >= l && x <= h
-        range _ _ _        = False
-
-parseFeatures :: Parser [Feature]
-parseFeatures = parseFeature `endBy` satisfy isSpace
-
-someText :: Parser Text
-someText = pack <$> many (satisfy (not . (`elem` [' ', '\n'])))
-
-getInput :: FilePath -> IO [Passport]
-getInput = parseFile (parseFeatures `sepBy` "\n")
-
-part1 :: [Passport] -> Int
-part1 = length . filter isValid
-
 part2 :: [Passport] -> Int
-part2 = length . filter isValid2
+part2 = countIf isValid
+  where
+    isValid Passport{..} = and [range 1920 2002 _birthYear,
+                                range 2010 2020 _issueYear,
+                                range 2020 2030 _expiration,
+                                validHeight _height,
+                                isHexColor _hairColor,
+                                _eyeColor /= InvalidColor,
+                                validPID _pid]
+    validHeight (x, "in") = range 59 76 x
+    validHeight (x, "cm") = range 150 193 x
+    validHeight _         = False
+    validPID x = T.length x == 9 && T.all isDigit x
+
+    range l h x = x >= l && x <= h
+    isHexColor (T.stripPrefix "#" -> Just xs) = T.length xs == 6 && T.all isHexDigit xs
+    isHexColor _                              = False

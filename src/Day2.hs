@@ -6,6 +6,7 @@ import           Text.Megaparsec.Char.Lexer (decimal)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
+import           Advent.Search
 
 data Policy = Policy Int Int Char deriving Show
 
@@ -18,9 +19,6 @@ parsePW = PW <$> parsePolicy <* lexeme ":" <*> lexeme (manyTill L.charLiteral (c
 
 getInput :: FilePath -> IO [PW]
 getInput = parseFile (many parsePW)
-
-countIf :: (a -> Bool) -> [a] -> Int
-countIf f = length . filter f
 
 part1 :: [PW] -> Int
 part1 = countIf valid
