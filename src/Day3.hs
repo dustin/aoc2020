@@ -18,10 +18,10 @@ getInput fn = parseGrid (\case '#' -> 1; _ -> 0) <$> readFile fn
 
 -- Count the trees along a given slope.
 trees :: World -> (Int, Int) -> Sum Int
-trees m (xoff, yoff) = fold [m Map.! pos i | i <- [0 .. (maxy `div` yoff)]]
+trees m (xoff, yoff) = fold [ at i | i <- [1 .. (maxy `div` yoff)] ]
   where
     ((maxx, maxy),_) = Map.findMax m
-    pos i = (i*xoff `mod` (maxx+1), i*yoff)
+    at i = m Map.! (i*xoff `mod` (maxx+1), i*yoff)
 
 part1 :: World -> Int
 part1 w = getSum $ trees w (3,1)
