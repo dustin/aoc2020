@@ -83,7 +83,6 @@ getInput = fmap catMaybes . parseFile (parsePassport `sepBy` "\n")
 part1 :: [Passport] -> Int
 part1 = length
 
-
 {-
 byr (Birth Year) - four digits; at least 1920 and at most 2002.
 iyr (Issue Year) - four digits; at least 2010 and at most 2020.
@@ -96,6 +95,7 @@ ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
 pid (Passport ID) - a nine-digit number, including leading zeroes.
 cid (Country ID) - ignored, missing or not.
 -}
+
 part2 :: [Passport] -> Int
 part2 = countIf isValid
   where
