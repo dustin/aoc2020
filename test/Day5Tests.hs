@@ -17,9 +17,13 @@ testPart1 = assertEqual "" 908 . part1 =<< getInput "input/day5"
 testPart2 :: Assertion
 testPart2 = assertEqual "" 619 . part2 =<< getInput "input/day5"
 
+testPart2b :: Assertion
+testPart2b = assertEqual "" 619 . part2' =<< getInput "input/day5"
+
 tests :: [TestTree]
 tests = [
   testCase "decode" testDecode,
   testCase "part1" testPart1,
-  testCase "part2" testPart2
+  testCase "part2" testPart2,
+  testCase "part2b" testPart2b
   ]
