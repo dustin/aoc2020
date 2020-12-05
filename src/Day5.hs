@@ -21,7 +21,10 @@ part2 w = head . filter hasNeighbor . Set.toList $ missing
     possible = Set.fromList [ r * 8 + c | r <- [1..126], c <- [0..7]]
     missing = possible `Set.difference` Set.fromList w
 
--- Mathy answer I don't understand, but it came up in a discussion, so I wrote it down.
+-- So, since all seats are encoded as numbers and we know the whole
+-- range of populated seats, we can just add up all of seats that
+-- should be there and subtract the value that we got to get the
+-- missing seat number.
 part2' :: [Int] -> Int
 part2' i = sum [mn..mx] - s
   where (Min mn, Max mx, Sum s) = foldMap (\x -> (Min x, Max x, Sum x)) i
