@@ -9,7 +9,7 @@ import           Test.Tasty.QuickCheck as QC
 import           Day5
 
 testDecode :: Assertion
-testDecode = assertEqual "" (70, 7) (decode "BFFFBBFRRR")
+testDecode = assertEqual "" 567 (decode "BFFFBBFRRR")
 
 testPart1 :: Assertion
 testPart1 = assertEqual "" 908 . part1 =<< getInput "input/day5"
