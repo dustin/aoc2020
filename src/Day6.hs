@@ -14,8 +14,11 @@ getInput :: FilePath -> IO [[CharSet]]
 getInput = parseFile (parseGroup `sepBy` "\n")
   where parseGroup = (BitSet.fromList ('a', 'z') <$> some letterChar) `endBy` optional spaceChar
 
+countWith :: (CharSet -> CharSet -> CharSet) -> [[CharSet]] -> Int
+countWith f = sum . fmap (BitSet.length . foldr1 f)
+
 part1 :: [[CharSet]] -> Int
-part1 = sum . fmap (BitSet.length . foldr1 BitSet.union)
+part1 = countWith BitSet.union
 
 part2 :: [[CharSet]] -> Int
-part2 = sum . fmap (BitSet.length . foldr1 BitSet.intersection)
+part2 = countWith BitSet.intersection
