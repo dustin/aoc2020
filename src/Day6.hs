@@ -1,12 +1,14 @@
 module Day6 where
 
-import qualified Data.Set     as Set
-import qualified Data.Text    as T
-import qualified Data.Text.IO as TIO
+import qualified Data.Set             as Set
+import           Text.Megaparsec      (endBy, optional, sepBy, some)
+import           Text.Megaparsec.Char (letterChar, spaceChar)
+
+import           Advent.AoC
 
 getInput :: FilePath -> IO [[Set.Set Char]]
-getInput = fmap parse . TIO.readFile
-  where parse = fmap (fmap (Set.fromList . T.unpack) . T.splitOn "\n") . T.splitOn "\n\n" . T.strip
+getInput = parseFile (parseGroup `sepBy` "\n")
+  where parseGroup = (Set.fromList <$> some letterChar) `endBy` optional spaceChar
 
 part1 :: [[Set.Set Char]] -> Int
 part1 = sum . fmap (Set.size . foldr1 Set.union)
