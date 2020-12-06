@@ -1,17 +1,21 @@
 module Day6 where
 
-import qualified Data.Set             as Set
+import           Data.Word            (Word32)
 import           Text.Megaparsec      (endBy, optional, sepBy, some)
 import           Text.Megaparsec.Char (letterChar, spaceChar)
 
 import           Advent.AoC
+import           Advent.BitSet        (BitSet)
+import qualified Advent.BitSet        as BitSet
 
-getInput :: FilePath -> IO [[Set.Set Char]]
+type CharSet = BitSet Char Word32
+
+getInput :: FilePath -> IO [[CharSet]]
 getInput = parseFile (parseGroup `sepBy` "\n")
-  where parseGroup = (Set.fromList <$> some letterChar) `endBy` optional spaceChar
+  where parseGroup = (BitSet.fromList ('a', 'z') <$> some letterChar) `endBy` optional spaceChar
 
-part1 :: [[Set.Set Char]] -> Int
-part1 = sum . fmap (Set.size . foldr1 Set.union)
+part1 :: [[CharSet]] -> Int
+part1 = sum . fmap (BitSet.length . foldr1 BitSet.union)
 
-part2 :: [[Set.Set Char]] -> Int
-part2 = sum . fmap (Set.size . foldr1 Set.intersection)
+part2 :: [[CharSet]] -> Int
+part2 = sum . fmap (BitSet.length . foldr1 BitSet.intersection)
