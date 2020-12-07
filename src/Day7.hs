@@ -15,7 +15,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import           Advent.AoC
 
 getInput :: FilePath -> IO (Map Text [(Int, Text)])
-getInput = fmap fold . parseFile (parseBag `endBy` "\n")
+getInput = parseFile (fold <$> parseBag `endBy` "\n")
   where parseBag = liftA2 Map.singleton (lexeme color <* lexeme "bags contain ") (contents <* ".")
         lexeme = L.lexeme space
         color = T.pack . unwords <$> replicateM 2 (lexeme (some letterChar))
