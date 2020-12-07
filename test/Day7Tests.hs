@@ -9,7 +9,7 @@ import           Test.Tasty.QuickCheck as QC
 import           Day7
 
 testPart1 :: Assertion
-testPart1 = assertEqual "" 254 . part1 =<< getInput "input/day7"
+testPart1 = assertEqual "" (Just 254) . part1 =<< getInput "input/day7"
 
 testPart2 :: Assertion
 testPart2 = assertEqual "" 6006 . part2 =<< getInput "input/day7"
