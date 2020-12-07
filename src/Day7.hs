@@ -8,7 +8,7 @@ import           Data.Map.Strict            (Map)
 import qualified Data.Map.Strict            as Map
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
-import           Text.Megaparsec            (endBy, sepBy, some, try)
+import           Text.Megaparsec            (endBy, optional, sepBy, some)
 import           Text.Megaparsec.Char       (letterChar, space)
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -21,7 +21,7 @@ getInput = parseFile (fold <$> parseBag `endBy` "\n")
         color = T.pack . unwords <$> replicateM 2 (lexeme (some letterChar))
         contents = [] <$ "no other bags"
                    <|> (dep `sepBy` lexeme ",")
-        dep = (liftA2 (,) (lexeme L.decimal) color) <* lexeme (try "bags" <|> "bag")
+        dep = (liftA2 (,) (lexeme L.decimal) color) <* lexeme ("bag" <* optional "s")
 
 part1 :: Map Text [(Int, Text)] -> Maybe Int
 part1 ins = (subtract 1) . length . G.reachable (G.transposeG g) <$> kf "shiny gold"
