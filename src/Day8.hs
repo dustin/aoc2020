@@ -1,54 +1,15 @@
 module Day8 where
 
-import           Control.Applicative        ((<|>))
-import           Data.Either                (fromLeft, rights)
-import qualified Data.Set                   as Set
-import qualified Data.Vector                as V
-import           Text.Megaparsec            (some)
-import           Text.Megaparsec.Char       (space)
-import qualified Text.Megaparsec.Char.Lexer as L
+import           Data.Either (fromLeft, rights)
+import qualified Data.Vector as V
 
-import           Advent.AoC
-
-data Operation = NOOP | ACC | JMP deriving Show
-
-data Instruction = Instruction Operation Int deriving Show
-
-type Program = V.Vector Instruction
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme space
-
-parseInstr :: Parser Instruction
-parseInstr = Instruction <$> lexeme op <*> L.signed space L.decimal <* "\n"
-  where
-    op = NOOP <$ "nop"
-         <|> ACC <$ "acc"
-         <|> JMP <$ "jmp"
-
-getInput :: FilePath -> IO Program
-getInput = fmap V.fromList . parseFile (some parseInstr)
-
-evalStep :: Program -> Int -> Int -> (Int, Int)
-evalStep prog pc acc = case prog V.! pc of
-                         Instruction NOOP _ -> (pc + 1, acc)
-                         Instruction ACC x  -> (pc + 1, acc + x)
-                         Instruction JMP x  -> (pc + x, acc)
-
-run :: Program -> [(Int, Int)]
-run prog = iterate (uncurry (evalStep prog)) (0, 0)
+import           Computer
 
 part1 :: Program -> Int
-part1 = fromLeft 0 . loopOrTerminate
+part1 = snd . fromLeft undefined . loopOrTerminate
 
-loopOrTerminate :: Program -> Either Int Int
-loopOrTerminate = f mempty . run
-  where
-    f _ ((601, x):_) = Right x
-    f s ((pc, x):xs)
-      | pc `Set.member` s = Left x
-      | otherwise = f (Set.insert pc s) xs
-    f _ _ = error "impossible"
+getInput :: FilePath -> IO Program
+getInput = readProgram
 
 bruteforce :: Program -> [Program]
 bruteforce = fmap V.fromList . go . V.toList
