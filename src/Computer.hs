@@ -1,4 +1,4 @@
-module Computer (Operation(..), Instruction(..), Program,
+module Computer (Operation(..), Instruction(..), Program, ProgramState,
                  readProgram, run, loopOrTerminate) where
 
 import           Control.Applicative        ((<|>))
