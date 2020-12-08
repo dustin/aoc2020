@@ -44,7 +44,7 @@ packages:
 extra-deps:
 - astar-0.3.0.0@sha256:8bf6350542e9db9451490e8993560ee843dc48a61d46a206985430f9b62461c8,967
 - git: https://github.com/dustin/aoc.git
-  commit: f6bfbf0f3c8338fe3f404acaae742d1e97f987db
+  commit: 5b761c6346e684d76b51ec67e26e1ff410635996
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
