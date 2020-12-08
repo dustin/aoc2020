@@ -1,18 +1,26 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Computer (Operation(..), Instruction(..), Program, ProgramState,
                  readProgram, run, loopOrTerminate) where
 
 import           Control.Applicative        ((<|>))
+import           Control.DeepSeq            (NFData (..))
 import qualified Data.Set                   as Set
 import qualified Data.Vector                as V
+import           GHC.Generics               (Generic)
 import           Text.Megaparsec            (some)
 import           Text.Megaparsec.Char       (space)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
 
-data Operation = NOOP | ACC | JMP deriving Show
+data Operation = NOOP | ACC | JMP deriving (Show, Generic)
 
-data Instruction = Instruction Operation Int deriving Show
+instance NFData Operation
+
+data Instruction = Instruction Operation Int deriving (Show, Generic)
+
+instance NFData Instruction
 
 type Program = V.Vector Instruction
 

@@ -82,3 +82,18 @@ tests:
     - tasty-quickcheck
     - QuickCheck
     - tasty-golden
+
+benchmarks:
+  aoc2020-bench:
+    dependencies:
+    - aoc2020
+    - criterion
+    - deepseq
+    ghc-options:
+    - -O2
+    - -fspecialise-aggressively
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    main: bench.hs
+    source-dirs: test/bench
