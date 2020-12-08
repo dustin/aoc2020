@@ -5,6 +5,8 @@ import           Data.Either    (rights)
 import           Data.Maybe     (listToMaybe)
 import qualified Data.Vector    as V
 
+import           Advent.Search
+
 import           Computer
 
 getInput :: FilePath -> IO Program
@@ -17,10 +19,8 @@ part2 :: Program -> Maybe Int
 part2 = listToMaybe . rights . fmap loopOrTerminate . bruteforce
   where
     bruteforce :: Program -> [Program]
-    bruteforce = fmap V.fromList . go . V.toList
+    bruteforce = fmap V.fromList . perturb f . V.toList
       where
-        go :: [Instruction] -> [[Instruction]]
-        go []                          = []
-        go (i@(Instruction NOOP x):xs) = [Instruction JMP x:xs] <> fmap (i:) (go xs)
-        go (i@(Instruction JMP x):xs)  = [Instruction NOOP x:xs] <> fmap (i:) (go xs)
-        go (x:xs)                      = fmap (x:) (go xs)
+        f (Instruction NOOP x) = [Instruction JMP x]
+        f (Instruction JMP x)  = [Instruction NOOP x]
+        f _                    = []
