@@ -34,25 +34,27 @@ readProgram = fmap V.fromList . parseFile (some parseInstr)
 type ProgramState = (Int, Int)
 
 -- | evalStep executes a single instruction from a given state and returns the new state.
-evalStep :: Program -> ProgramState -> ProgramState
-evalStep prog (pc, acc) = case prog V.! pc of
-                            Instruction NOOP _ -> (pc + 1, acc)
-                            Instruction ACC x  -> (pc + 1, acc + x)
-                            Instruction JMP x  -> (pc + x, acc)
+-- A Left value indicates we've gone outside of program space (i.e., terminated?)
+-- A Right value indicates we may continue.
+evalStep :: Program -> Either ProgramState ProgramState -> Either ProgramState ProgramState
+evalStep _ l@(Left _) = l
+evalStep prog (Right st@(pc, acc)) = maybe (Left st) (Right . ex) (prog V.!? pc)
+  where
+    ex (Instruction NOOP _) = (pc+1, acc)
+    ex (Instruction ACC x)  = (pc+1, acc+x)
+    ex (Instruction JMP x)  = (pc+x, acc)
 
 -- | Run returns a continuous stream of program states from an initial state.
-run :: Program -> [ProgramState]
-run prog = iterate (evalStep prog) (0, 0)
+run :: Program -> [Either ProgramState ProgramState]
+run prog = iterate (evalStep prog) (Right (0, 0))
 
 -- | loopOrTerminate returns either a Left program state at a the
 -- point *before* a loop occurs, or the Right final accumulator state.
 loopOrTerminate :: Program -> Either ProgramState Int
-loopOrTerminate program = f mempty . run $ program
+loopOrTerminate = fmap snd . f mempty . run
   where
-    end = length program
-    f _ ((n, x):_)
-      | n == end = Right x
-    f s ((opc,_):n@(npc, x):xs)
-      | npc `Set.member` s = Left (opc, x)
+    f _ (r@(Right _):(Left _):_) = r            -- normal termination
+    f s (Right (opc,_):n@(Right (npc, x)):xs)
+      | npc `Set.member` s = Left (opc, x)      -- looped
       | otherwise = f (Set.insert npc s) (n:xs)
     f _ _ = error "impossible"
