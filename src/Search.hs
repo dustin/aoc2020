@@ -1,7 +1,7 @@
 module Search where
 
-import           Data.Foldable (toList)
-import qualified Data.IntMap   as IntMap
+import           Data.Foldable      (toList)
+import qualified Data.IntMap.Strict as IntMap
 
 -- | twosum via IntSet.
 twosumOn :: Foldable t
