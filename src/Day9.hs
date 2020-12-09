@@ -2,10 +2,7 @@
 
 module Day9 where
 
-import           Data.Coerce    (coerce)
-import           Data.List      (tails)
-import           Data.Maybe     (catMaybes)
-import           Data.Semigroup (Max (..), Min (..))
+import           Data.Maybe (listToMaybe)
 
 getInput :: FilePath -> IO [Int]
 getInput = fmap (fmap read . words) . readFile
@@ -23,13 +20,8 @@ part1 :: [Int] -> Int
 part1 = part1' 25
 
 part2 :: [Int] -> Int
-part2 xs = ans . head . catMaybes $ sums (part1 xs) <$> tails xs
-  where ans (l,h) = l + h
-        sums _ [] = Nothing
-        sums maxv xs'@(x:_) = go 0 (Min x, Max x) xs'
-          where
-            go _ _ [] = Nothing
-            go n r (x':xs'')
-              | n + x' == maxv = Just (coerce r)
-              | n + x' > maxv = Nothing
-              | otherwise = go (n + x') (r <> (Min x', Max x')) xs''
+part2 xs = minimum sub + maximum sub
+  where (Just (l,h)) = listToMaybe [(snd a, snd b) | a <- sums, b <- sums, fst b - fst a == maxv]
+        sums = zip (scanl (+) 0 xs) [0..]
+        sub = take (h-l) $ drop l xs
+        maxv = part1 xs
