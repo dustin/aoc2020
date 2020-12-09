@@ -15,6 +15,6 @@ tests :: [Benchmark]
 tests = [
   env input $ \ ~x -> bgroup "" [
       bench "part1" $ nf part1 x,
-      bench "part1" $ nf part2 x
+      bench "part2" $ nf (part2' 1539) x
       ]
   ]
