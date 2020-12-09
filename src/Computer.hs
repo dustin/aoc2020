@@ -14,7 +14,10 @@ import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
 
-data Operation = NOOP Int | ACC Int | JMP Int deriving (Show, Generic)
+data Operation = NOOP !Int
+               | ACC !Int
+               | JMP !Int
+  deriving (Show, Generic)
 
 instance NFData Operation
 
