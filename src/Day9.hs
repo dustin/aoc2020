@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Day9 where
 
-import           Data.Maybe (listToMaybe)
+import           Data.Maybe     (isJust)
+import           Data.Semigroup (Max (..), Min (..))
+
+import           Search
 
 getInput :: FilePath -> IO [Int]
 getInput = fmap (fmap read . words) . readFile
@@ -14,14 +15,14 @@ part1' size xs = let (h,t) = splitAt size xs in go h t
     go prev (x:xs')
       | matches x prev = go (drop 1 prev <> [x]) xs'
       | otherwise = x
-    matches x ns = (not.null) [() | a <- ns, b <- ns, a + b == x]
+    matches x ns = isJust (twosum x ns)
 
 part1 :: [Int] -> Int
 part1 = part1' 25
 
 part2 :: [Int] -> Int
-part2 xs = minimum sub + maximum sub
-  where (Just (l,h)) = listToMaybe [(snd a, snd b) | a <- sums, b <- sums, fst b - fst a == maxv]
+part2 xs = subMin + subMax
+  where Just ((_,h),(_,l)) = twosumOn fst (subtract maxv) sums
         sums = zip (scanl (+) 0 xs) [0..]
-        sub = take (h-l) $ drop l xs
+        (Min subMin, Max subMax) = foldMap (\x -> (Min x, Max x)) . take (h-l) $ drop l xs
         maxv = part1 xs
