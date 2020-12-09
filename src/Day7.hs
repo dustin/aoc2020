@@ -21,10 +21,10 @@ getInput = parseFile (fold <$> parseBag `endBy` "\n")
         color = T.pack . unwords <$> replicateM 2 (lexeme (some letterChar))
         contents = [] <$ "no other bags"
                    <|> (dep `sepBy` lexeme ",")
-        dep = (liftA2 (,) (lexeme L.decimal) color) <* lexeme ("bag" <* optional "s")
+        dep = liftA2 (,) (lexeme L.decimal) color <* lexeme ("bag" <* optional "s")
 
 part1 :: Map Text [(Int, Text)] -> Maybe Int
-part1 ins = (subtract 1) . length . G.reachable (G.transposeG g) <$> kf "shiny gold"
+part1 ins = subtract 1 . length . G.reachable (G.transposeG g) <$> kf "shiny gold"
   where (g, _, kf) = G.graphFromEdges . fmap (\(k, ds) -> (k, k, fmap snd ds)) . Map.toList $ ins
 
 part2 :: Map Text [(Int, Text)] -> Int
