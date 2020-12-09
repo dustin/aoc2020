@@ -6,8 +6,8 @@
 
 module Day9 where
 
-import           Data.Foldable  (toList)
 import           Data.List      (tails)
+import           Data.Maybe     (isJust)
 import           Data.Semigroup (Max (..), Min (..))
 import qualified Data.Sequence  as Seq
 
@@ -21,7 +21,7 @@ part1' size xs = ans . dropWhile match $ windows
   where
     ans ((_ Seq.:|> a):_) = a
     windows = Seq.fromList . take (size+1) <$> tails xs
-    match (w Seq.:|> t) = (not.null) [() | x:ys <- tails (toList w), y <- ys, x + y == t]
+    match (w Seq.:|> t) = isJust (twodumb t w)
 
 part1 :: [Int] -> Int
 part1 = part1' 25
