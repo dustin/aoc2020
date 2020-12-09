@@ -7,8 +7,7 @@ twosumOn :: (a -> Int)   -- ^ Representation function
          -> (Int -> Int) -- ^ Target function, typically (someVal -)
          -> [a]          -- ^ stuff to search
          -> Maybe (a, a) -- ^ The target values
-twosumOn _ _ [] = Nothing
-twosumOn r tf xs = go mempty xs
+twosumOn r tf = go mempty
   where
     go _ [] = Nothing
     go m (x:xs')
