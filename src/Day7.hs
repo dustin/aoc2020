@@ -30,3 +30,7 @@ part1 ins = (subtract 1) . length . G.reachable (G.transposeG g) <$> kf "shiny g
 part2 :: Map Text [(Int, Text)] -> Int
 part2 m = count "shiny gold"
   where count k = sum (fmap (\(n, k') -> n + (n * count k')) (m Map.! k))
+
+part2' :: Map Text [(Int, Text)] -> Int
+part2' = (Map.! "shiny gold") . löb . fmap e
+  where e c m = sum [n + (n * m Map.! k) | (n,k) <- c]
