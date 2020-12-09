@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Computer (Operation(..), Instruction(..), Program, ProgramState,
+module Computer (Operation(..), Program, ProgramState,
                  readProgram, run, loopOrTerminate) where
 
 import           Control.Applicative        ((<|>))
@@ -8,35 +8,32 @@ import           Control.DeepSeq            (NFData (..))
 import qualified Data.Set                   as Set
 import qualified Data.Vector                as V
 import           GHC.Generics               (Generic)
-import           Text.Megaparsec            (some)
+import           Text.Megaparsec            (endBy)
 import           Text.Megaparsec.Char       (space)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
 
-data Operation = NOOP | ACC | JMP deriving (Show, Generic)
+data Operation = NOOP Int | ACC Int | JMP Int deriving (Show, Generic)
 
 instance NFData Operation
 
-data Instruction = Instruction Operation Int deriving (Show, Generic)
-
-instance NFData Instruction
-
-type Program = V.Vector Instruction
+type Program = V.Vector Operation
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme space
 
-parseInstr :: Parser Instruction
-parseInstr = Instruction <$> lexeme op <*> L.signed space L.decimal <* "\n"
+parseInstr :: Parser Operation
+parseInstr = NOOP <$> intop "nop"
+         <|> ACC <$> intop "acc"
+         <|> JMP <$> intop "jmp"
   where
-    op = NOOP <$ "nop"
-         <|> ACC <$ "acc"
-         <|> JMP <$ "jmp"
+    intop :: Parser a -> Parser Int
+    intop n = lexeme n *> L.signed space L.decimal
 
 -- | readProgram parses a file of instructions into a Program.
 readProgram :: FilePath -> IO Program
-readProgram = fmap V.fromList . parseFile (some parseInstr)
+readProgram = fmap V.fromList . parseFile (parseInstr `endBy` "\n")
 
 -- | Program state is the PC and Accumulator value
 type ProgramState = (Int, Int)
@@ -48,9 +45,9 @@ evalStep :: Program -> Either ProgramState ProgramState -> Either ProgramState P
 evalStep _ l@(Left _) = l
 evalStep prog (Right st@(pc, acc)) = maybe (Left st) (Right . ex) (prog V.!? pc)
   where
-    ex (Instruction NOOP _) = (pc+1, acc)
-    ex (Instruction ACC x)  = (pc+1, acc+x)
-    ex (Instruction JMP x)  = (pc+x, acc)
+    ex (NOOP _) = (pc+1, acc)
+    ex (ACC x)  = (pc+1, acc+x)
+    ex (JMP x)  = (pc+x, acc)
 
 -- | Run returns a continuous stream of program states from an initial state.
 run :: Program -> [Either ProgramState ProgramState]

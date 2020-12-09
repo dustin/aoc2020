@@ -21,6 +21,6 @@ part2 = listToMaybe . rights . fmap loopOrTerminate . bruteforce
     bruteforce :: Program -> [Program]
     bruteforce = fmap V.fromList . perturb f . V.toList
       where
-        f (Instruction NOOP x) = [Instruction JMP x]
-        f (Instruction JMP x)  = [Instruction NOOP x]
-        f _                    = []
+        f (NOOP x) = [JMP x]
+        f (JMP x)  = [NOOP x]
+        f _        = []
