@@ -8,7 +8,8 @@ tests :: [Benchmark]
 tests = [
   env (getInput "input/day10") $ \ ~x -> bgroup "" [
       bench "part1" $ nf part1 x,
-      bench "part2" $ nf part2 x,
-      bench "part2 (map)" $ nf part2' x
+      bench "part2 (löb)" $ nf part2 x,
+      bench "part2 (map)" $ nf part2' x,
+      bench "part2 (trib)" $ nf part2trib x
       ]
   ]
