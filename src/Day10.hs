@@ -62,13 +62,21 @@ part2' ins = maximum m
 -- boring single-path NOOPs.  So we multiply the tribonaccis we find,
 -- considering everything else a NOOP and we get the answer.
 part2trib :: [Int] -> Int
-part2trib = getProduct . foldMap lengths . group . diff . addEnds
+part2trib = getProduct . foldMap lengths . group . diff . (0:)
   where
     lengths xs@(1:_) = Product (trib (length xs))
     lengths _        = 1
-    addEnds xs = 0 : xs
     trib = (tribs V.!)
       where tribs = V.fromList [1, 1, 2, 4, 7, 13, 24]
+
+-- glguy had a ridiculously simple implicit tribonacci mechanism I
+-- wanted to write down.
+part2gl :: [Int] -> Int
+part2gl xs = go (diff (0 : xs <> [maximum xs + 3])) 0 0 1
+  where go (1:ds) x y z = go ds y z $! x+y+z
+        go (3:ds) _ _ z = go ds 0 0 z
+        go _      _ _ z = z
+
 
 -- I didn't end up using this, but here's a list of all of the
 -- possible arrangements (from the end, `fmap reverse` if you want
