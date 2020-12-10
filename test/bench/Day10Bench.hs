@@ -11,6 +11,7 @@ tests = [
       bench "part2 (löb)" $ nf part2 x,
       bench "part2 (map)" $ nf part2' x,
       bench "part2 (trib)" $ nf part2trib x,
-      bench "part2 (glguy)" $ nf part2gl x
+      bench "part2 (glguy)" $ nf part2gl x,
+      bench "part2 (hanqing)" $ nf part2h x
       ]
   ]

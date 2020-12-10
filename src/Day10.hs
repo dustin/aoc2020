@@ -1,4 +1,5 @@
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections    #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Day10 where
 
@@ -77,6 +78,11 @@ part2gl xs = go (diff (0 : xs <> [maximum xs + 3])) 0 0 1
         go (3:ds) _ _ z = go ds 0 0 z
         go _      _ _ z = z
 
+part2h  :: [Int] -> Int
+part2h ins = product counts
+  where
+    diffGroups = filter (\x -> (head x == 1)) $ group . diff $ (0:ins<>[maximum ins + 3])
+    counts = zipWith (^) [1,2,4,7] (map length . group . sort $ diffGroups)
 
 -- I didn't end up using this, but here's a list of all of the
 -- possible arrangements (from the end, `fmap reverse` if you want
