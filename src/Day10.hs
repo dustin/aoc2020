@@ -23,7 +23,7 @@ part1 = product . Map.fromListWith (+) . fmap (,1) . diff . addEnds
   where addEnds xs = 0 : xs <> [maximum xs + 3]
 
 part2 :: [Int] -> Int
-part2 ins = succ . IntMap.findWithDefault 0 0 . löb . fmap f $ neighbors
+part2 ins = succ . maximum . löb . fmap f $ neighbors
   where
     f :: [Int] -> IntMap.IntMap Int -> Int
     f [] _ = 0
@@ -67,8 +67,8 @@ part2trib = getProduct . foldMap lengths . group . diff . addEnds
     lengths xs@(1:_) = Product (trib (length xs))
     lengths _        = 1
     addEnds xs = 0 : xs
-    tribs = V.fromList [1, 1, 2, 4, 7, 13, 24]
     trib = (tribs V.!)
+      where tribs = V.fromList [1, 1, 2, 4, 7, 13, 24]
 
 -- I didn't end up using this, but here's a list of all of the
 -- possible arrangements (from the end, `fmap reverse` if you want
