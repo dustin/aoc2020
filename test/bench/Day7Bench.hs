@@ -9,6 +9,7 @@ tests = [
   env (getInput "input/day7") $ \ ~x -> bgroup "" [
       bench "part1" $ nf part1 x,
       bench "part2" $ nf part2 x,
-      bench "part2 (löb)" $ nf part2' x
+      bench "part2 (löb)" $ nf part2' x,
+      bench "part2 (lmap)" $ nf part2l x
       ]
   ]

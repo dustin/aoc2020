@@ -4,6 +4,7 @@ import           Control.Applicative        (liftA2, (<|>))
 import           Control.Monad              (replicateM)
 import           Data.Foldable              (fold)
 import qualified Data.Graph                 as G
+import qualified Data.Map                   as LMap
 import           Data.Map.Strict            (Map)
 import qualified Data.Map.Strict            as Map
 import           Data.Text                  (Text)
@@ -14,7 +15,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
 
-getInput :: FilePath -> IO (Map Text [(Int, Text)])
+getInput :: Num n => FilePath -> IO (Map Text [(n, Text)])
 getInput = parseFile (fold <$> parseBag `endBy` "\n")
   where parseBag = liftA2 Map.singleton (lexeme color <* lexeme "bags contain ") (contents <* ".")
         lexeme = L.lexeme space
@@ -34,3 +35,7 @@ part2 m = count "shiny gold"
 part2' :: Map Text [(Int, Text)] -> Int
 part2' = (Map.! "shiny gold") . löb . fmap e
   where e c m = sum [n + (n * m Map.! k) | (n,k) <- c]
+
+part2l :: Map Text [(Int, Text)] -> Int
+part2l m = lm Map.! "shiny gold"
+  where lm = fmap (\xs -> sum [n + (n * lm LMap.! x) | (n, x) <- xs ]) m
