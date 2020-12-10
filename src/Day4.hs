@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns    #-}
@@ -5,18 +6,22 @@
 module Day4 where
 
 import           Control.Applicative        (liftA2, (<|>))
+import           Control.DeepSeq            (NFData (..))
 import           Control.Lens
 import           Data.Char                  (isDigit, isHexDigit, isSpace)
 import           Data.Maybe                 (catMaybes)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
+import           GHC.Generics               (Generic)
 import           Text.Megaparsec            (endBy, many, option, satisfy, sepBy)
 import           Text.Megaparsec.Char.Lexer (decimal)
 
 import           Advent.AoC
 import           Advent.Search
 
-data Color = Amb | Blu | Brn | Gry | Grn | Hzl | Oth | InvalidColor deriving (Show, Eq)
+data Color = Amb | Blu | Brn | Gry | Grn | Hzl | Oth | InvalidColor deriving (Show, Eq, Generic)
+
+instance NFData Color
 
 data Feature = BirthYear Int
              | IssueYear Int
@@ -26,7 +31,9 @@ data Feature = BirthYear Int
              | EyeColor Color
              | PID Text
              | Country Int
-             deriving Show
+             deriving (Show, Generic)
+
+instance NFData Feature
 
 makePrisms ''Feature
 
@@ -38,7 +45,9 @@ data Passport = Passport {
   , _hairColor  :: Text
   , _eyeColor   :: Color
   , _pid        :: Text
-  } deriving Show
+  } deriving (Show, Generic)
+
+instance NFData Passport
 
 parsePassport :: Parser (Maybe Passport)
 parsePassport = parseFeatures >>= \fs ->

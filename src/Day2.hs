@@ -1,5 +1,9 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Day2 where
 
+import           Control.DeepSeq            (NFData (..))
+import           GHC.Generics               (Generic)
 import           Text.Megaparsec            (many, manyTill)
 import           Text.Megaparsec.Char       (char, space)
 import           Text.Megaparsec.Char.Lexer (decimal)
@@ -8,9 +12,12 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import           Advent.AoC
 import           Advent.Search
 
-data Policy = Policy Int Int Char deriving Show
+data Policy = Policy Int Int Char deriving (Show, Generic)
 
-data PW = PW Policy String deriving Show
+data PW = PW Policy String deriving (Show, Generic)
+
+instance NFData Policy
+instance NFData PW
 
 parsePW :: Parser PW
 parsePW = PW <$> parsePolicy <* lexeme ":" <*> lexeme (manyTill L.charLiteral (char '\n'))
