@@ -5,15 +5,9 @@ import           Data.Either (fromRight)
 
 import           Day9
 
-srcFile :: FilePath
-srcFile = "input/day9"
-
-input :: IO [Int]
-input = getInput srcFile
-
 tests :: [Benchmark]
 tests = [
-  env input $ \ ~x -> bgroup "" [
+  env (getInput "input/day9") $ \ ~x -> bgroup "" [
       bench "part1" $ nf part1 x,
       bench "part2" $ nf (part2' 1539) x
       ]

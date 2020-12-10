@@ -3,8 +3,8 @@ module Main (main) where
 import           Criterion      (bgroup)
 import           Criterion.Main (defaultMain)
 
-import           Day8Bench
-import           Day9Bench
+import qualified Day8Bench
+import qualified Day9Bench
 
 main :: IO ()
 main = defaultMain [
