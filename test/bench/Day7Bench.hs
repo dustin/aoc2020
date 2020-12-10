@@ -1,7 +1,6 @@
 module Day7Bench where
 
-import           Criterion   (Benchmark, bench, bgroup, env, nf)
-import           Data.Either (fromRight)
+import           Criterion (Benchmark, bench, bgroup, env, nf)
 
 import           Day7
 
