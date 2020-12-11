@@ -4,6 +4,7 @@ import           Criterion      (bgroup)
 import           Criterion.Main (defaultMain)
 
 import qualified Day10Bench
+import qualified Day11Bench
 import qualified Day1Bench
 import qualified Day2Bench
 import qualified Day3Bench
@@ -25,5 +26,6 @@ main = defaultMain [
   bgroup "day7" Day7Bench.tests,
   bgroup "day8" Day8Bench.tests,
   bgroup "day9" Day9Bench.tests,
-  bgroup "day10" Day10Bench.tests
+  bgroup "day10" Day10Bench.tests,
+  bgroup "day11" Day11Bench.tests
   ]
