@@ -31,7 +31,7 @@ part2 ins = succ . maximum . löb . fmap f $ neighbors
     f c m  = length c - 1 + sum [ IntMap.findWithDefault 0 k m | k <- c ]
     neighbors = IntMap.fromList [ (k, [n+k | n <- [1..3], IntSet.member (n+k) xss]) | k <- xs]
     xs = 0 : ins
-    xss = IntSet.insert (maximum ins + 3) $ IntSet.fromList xs
+    xss = IntSet.fromList xs
 
 --
 -- Stuff below this isn't part of the Final Solution, but was interesting.
