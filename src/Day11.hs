@@ -1,69 +1,82 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# Options_GHC -Wno-orphans #-}
+
 module Day11 where
 
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
-import           Data.Maybe      (catMaybes)
+import qualified Data.Array         as A
+import qualified Data.Array.Unboxed as UA
+import           Data.Ix            (Ix (..))
+import qualified Data.Map.Strict    as Map
+import           Data.Maybe         (catMaybes)
 
 import           Advent.AoC
 import           Advent.Search
 import           Advent.TwoD
 import           Advent.Vis
 
-type World = Map Point Char
+type World = UA.Array Point Char
 
 data Position = Floor | Empty | Occupied
 
 getInput :: FilePath -> IO World
-getInput = fmap (parseGrid id) . readFile
+getInput = fmap (toArray . parseGrid id) . readFile
+  where
+    toArray m = UA.array (bounds2d m) (Map.assocs m)
 
-occupied :: World -> Point -> Bool
-occupied w p = Map.findWithDefault '.' p w == '#'
+instance Bounded2D (UA.Array Point Char) where
+  bounds2d = UA.bounds
 
 drawMap :: World -> IO ()
-drawMap w = putStrLn . drawString w $ (w Map.!)
+drawMap w = putStrLn . drawString w $ (w UA.!)
 
 part1 :: World -> Int
-part1 w = length . Map.toList . Map.filter (== '#') $ stable
-  where (Just stable) = findRepeated . iterate move $ w
-        move w' = Map.mapWithKey f w'
+part1 w = countIf (== '#') . UA.elems $ stable
+  where (Just stable) = findRepeatedOn (UA.assocs) . iterate move $ w
+        move :: UA.Array Point Char -> UA.Array Point Char
+        move w' = UA.array (UA.bounds w') (fmap f (UA.assocs w'))
           where
-            f pos 'L'
-              | any (occupied w') (aroundD pos) = 'L'
-              | otherwise = '#'
-            f pos '#'
-              | countIf (occupied w') (aroundD pos) >= 4 = 'L'
-            f _ x = x
+            f (pos, 'L')
+              | any occupied (aroundD pos) = (pos, 'L')
+              | otherwise = (pos, '#')
+            f (pos, '#')
+              | countIf occupied (aroundD pos) >= 4 = (pos, 'L')
+            f x = x
+
+            occupied p'
+              | inRange (UA.bounds w) p' = w' UA.! p' == '#'
+              | otherwise = False
 
 findSeats :: World -> Point -> [(Point, Char)]
 findSeats w p = catMaybes (findSeat <$> aroundD (0,0))
   where
-    ((minx, miny), (maxx, maxy)) = bounds2d w
     walk (x,y) dir@(xd, yd) = (x + xd, y + yd) : walk (x + xd, y + yd) dir
-    oob (x,y) = x < minx || y < miny || x > maxx || y > maxy
     findSeat = f . walk p
       where
         f [] = Nothing
         f (p':xs)
-          | oob p' = Nothing
-          | isSeat p' = Just (p', Map.findWithDefault '.' p' w)
+          | not (inRange (UA.bounds w) p') = Nothing
+          | isSeat p' = Just (p', w UA.! p')
           | otherwise = f xs
-        isSeat p' = (Map.findWithDefault '.' p' w) `elem` ['L', '#']
+        isSeat p' = (w UA.! p') `elem` ['L', '#']
 
 part2 :: World -> Int
-part2 w = length . Map.toList . Map.filter (== '#') $ stable
+part2 w = countIf (== '#') . UA.elems $ stable
   where
-    (Just stable) = findRepeated . iterate (move nMap) $ w
-    nMap = Map.mapWithKey f w
-      where f p '#' = fst <$> findSeats w p
-            f p 'L' = fst <$> findSeats w p
-            f _ _   = []
+    (Just stable) = findRepeatedOn (UA.assocs) . iterate (move nMap) $ w
+    nMap :: A.Array Point [Point]
+    nMap = A.array (A.bounds w) (fmap f $ UA.assocs w)
+      where f (p, '#') = (p, fst <$> findSeats w p)
+            f (p, 'L') = (p, fst <$> findSeats w p)
+            f (p, _)   = (p, [])
 
-    move nm w' = Map.mapWithKey f w'
+    move :: A.Array Point [Point] -> UA.Array Point Char -> UA.Array Point Char
+    move nm w' = UA.array (UA.bounds w') (fmap f (UA.assocs w'))
       where
-        occd pos = Map.findWithDefault '.' pos w' == '#'
-        f pos 'L'
-          | any occd (Map.findWithDefault [] pos nm) = 'L'
-          | otherwise = '#'
-        f pos '#'
-          | countIf occd (Map.findWithDefault [] pos nm) >= 5 = 'L'
-        f _ x = x
+        occd pos = w' UA.! pos == '#'
+        f :: (Point, Char) -> (Point, Char)
+        f (pos, 'L')
+          | any occd (nm A.! pos) = (pos, 'L')
+          | otherwise = (pos, '#')
+        f (pos, '#')
+          | countIf occd (nm A.! pos) >= 5 = (pos, 'L')
+        f (pos, x) = (pos, x)
