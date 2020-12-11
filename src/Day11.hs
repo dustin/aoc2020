@@ -3,7 +3,6 @@
 
 module Day11 where
 
-import qualified Data.Array         as A
 import qualified Data.Array.Unboxed as UA
 import           Data.Ix            (Ix (..))
 import qualified Data.Map.Strict    as Map
@@ -14,28 +13,31 @@ import           Advent.Search
 import           Advent.TwoD
 import           Advent.Vis
 
-type World = UA.Array Point Char
+type World = UA.UArray Point Char
 
 getInput :: FilePath -> IO World
 getInput = fmap (toArray . parseGrid id) . readFile
   where
     toArray m = UA.array (bounds2d m) (Map.assocs m)
 
-instance Bounded2D (UA.Array Point Char) where
+instance Bounded2D (UA.UArray Point Char) where
   bounds2d = UA.bounds
 
 drawMap :: World -> IO ()
 drawMap w = putStrLn . drawString w $ (w UA.!)
 
-move :: Int -> A.Array Point [Point] -> World -> World
-move minSeat nm w = w UA.// (foldMap f (UA.assocs w))
+type WP = (World, Bool)
+
+move :: Int -> UA.Array Point [Point] -> WP -> WP
+move minSeat nm (w,_) = (w UA.// changes, (not.null) changes)
   where
+    changes = foldMap f (UA.assocs w)
     occd pos = w UA.! pos == '#'
     f (pos, 'L')
-      | any occd (nm A.! pos) = [] -- no change
+      | any occd (nm UA.! pos) = [] -- no change
       | otherwise = [(pos, '#')]
     f (pos, '#')
-      | countIf occd (nm A.! pos) >= minSeat = [(pos, 'L')]
+      | countIf occd (nm UA.! pos) >= minSeat = [(pos, 'L')]
     f _ = [] -- no change
 
 isSeat :: Char -> Bool
@@ -43,22 +45,22 @@ isSeat '#' = True
 isSeat 'L' = True
 isSeat _   = False
 
-part1 :: World -> Maybe Int
-part1 w = countIf (== '#') . UA.elems <$> stabilize (move 4 nm) w
+part1 :: World -> Int
+part1 w = countIf (== '#') . UA.elems . stabilize (move 4 nm) $ w
   where
-    nm = A.array (A.bounds w) (fmap f $ UA.assocs w)
+    nm = UA.array (UA.bounds w) (fmap f $ UA.assocs w)
       where f (p, c)
               | isSeat c = (p, filter inBounds . aroundD $ p)
               | otherwise = (p, [])
             inBounds = inRange (UA.bounds w)
 
-stabilize :: (World -> World) -> World -> Maybe World
-stabilize m = findRepeated . iterate m
+stabilize :: (WP -> WP) -> World -> World
+stabilize m w = fst . head . dropWhile snd . iterate m $ (w,True)
 
-part2 :: World -> Maybe Int
-part2 w = countIf (== '#') . UA.elems <$> stabilize (move 5 nMap) w
+part2 :: World -> Int
+part2 w = countIf (== '#') . UA.elems . stabilize (move 5 nMap) $ w
   where
-    nMap = A.array (A.bounds w) (fmap f $ UA.assocs w)
+    nMap = UA.array (UA.bounds w) (fmap f $ UA.assocs w)
       where f (p, c)
               | isSeat c = (p, fst <$> findSeats p)
               | otherwise = (p, [])
