@@ -26,6 +26,10 @@ testPart2gl = assertEqual "" 12401793332096 . part2gl =<< getInput "input/day10"
 testPart2h :: Assertion
 testPart2h = assertEqual "" 12401793332096 . part2h =<< getInput "input/day10"
 
+testPart2span :: Assertion
+testPart2span = assertEqual "" 12401793332096 . part2span =<< getInput "input/day10"
+
+
 testArrangements :: Assertion
 testArrangements = assertEqual "" [[19,16,15,12,10,7,4,1,0],
                                    [19,16,15,12,10,7,5,4,1,0],
@@ -45,5 +49,6 @@ tests = [
   testCase "part2 (trib)" testPart2trib,
   testCase "part2 (glguy)" testPart2gl,
   testCase "part2 (hanqing)" testPart2h,
+  testCase "part2 (span)" testPart2span,
   testCase "arrangements" testArrangements
   ]

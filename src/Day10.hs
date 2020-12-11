@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections    #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ViewPatterns     #-}
 
 module Day10 where
 
@@ -16,7 +17,7 @@ import           Advent.Search
 getInput :: FilePath -> IO [Int]
 getInput = fmap (sort . fmap read . words) . readFile
 
-diff :: [Int] -> [Int]
+diff :: Num n => [n] -> [n]
 diff xs = zipWith (-) (tail xs) xs
 
 part1 :: [Int] -> Int
@@ -77,6 +78,15 @@ part2gl xs = go (diff (0 : xs <> [maximum xs + 3])) 0 0 1
   where go (1:ds) x y z = go ds y z $! x+y+z
         go (3:ds) _ _ z = go ds 0 0 z
         go _      _ _ z = z
+
+part2span :: [Int] -> Int
+part2span = go . skip . diff . (0:)
+  where
+    skip = dropWhile (/= 1)
+    go []                         = 1
+    go (span (== 1) -> (ones,xs)) = trib (length ones) * go (skip xs)
+    trib = (tribs V.!)
+      where tribs = V.fromList [1, 1, 2, 4, 7, 13, 24]
 
 part2h  :: [Int] -> Int
 part2h ins = product counts

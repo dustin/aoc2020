@@ -12,6 +12,7 @@ tests = [
       bench "part2 (map)" $ nf part2' x,
       bench "part2 (trib)" $ nf part2trib x,
       bench "part2 (glguy)" $ nf part2gl x,
-      bench "part2 (hanqing)" $ nf part2h x
+      bench "part2 (hanqing)" $ nf part2h x,
+      bench "part2 (span)" $ nf part2span x
       ]
   ]
