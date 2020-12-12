@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# Options_GHC -Wno-orphans #-}
 
@@ -31,45 +32,42 @@ type WP = (World, Bool)
 
 type Neighbors = Point -> [Int]
 
-move :: Int -> Neighbors -> WP -> WP
-move minSeat nm (w,_) = (w UA.// changes, (not.null) changes)
-  where
-    changes = foldMap f (UA.assocs w)
-    occd :: Int -> Bool
-    occd pos = w `unsafeAt` pos == '#'
-    f (pos, 'L')
-      | (not.any occd) (nm pos) = [(pos, '#')]
-    f (pos, '#')
-      | countIf occd (nm pos) >= minSeat = [(pos, 'L')]
-    f _ = [] -- no change
-
 isSeat :: Char -> Bool
 isSeat '#' = True
 isSeat 'L' = True
 isSeat _   = False
 
+solve :: Int -> UA.Array Point [Int] -> World -> Int
+solve mins nm w = countIf (== '#') . UA.elems . stabilize $ move
+  where
+    stabilize m = fst . head . dropWhile snd . iterate m $ (w, True)
+
+    move (w',_) = (w' UA.// changes, (not.null) changes)
+      where
+        changes = foldMap f (UA.assocs w')
+        occd :: Int -> Bool
+        occd pos = w' `unsafeAt` pos == '#'
+        f (pos, 'L') | (not.any occd) (nm UA.! pos)       = [(pos, '#')]
+        f (pos, '#') | countIf occd (nm UA.! pos) >= mins = [(pos, 'L')]
+        f _                                               = [] -- no change
+
 part1 :: World -> Int
-part1 w = countIf (== '#') . UA.elems . stabilize (move 4 (nm UA.!)) $ w
+part1 w = solve 4 nm w
   where
     b = UA.bounds w
-    nm :: UA.Array Point [Int]
     nm = UA.array b (fmap f $ UA.assocs w)
       where f (p, c)
-              | isSeat c = (p, fmap (index b) . filter cand . aroundD $ p)
+              | isSeat c  = (p, fmap (index b) . filter cand . aroundD $ p)
               | otherwise = (p, [])
             cand x = inRange b x && isSeat (w UA.! x)
 
-stabilize :: (WP -> WP) -> World -> World
-stabilize m w = fst . head . dropWhile snd . iterate m $ (w,True)
-
 part2 :: World -> Int
-part2 w = countIf (== '#') . UA.elems . stabilize (move 5 (nm UA.!)) $ w
+part2 w = solve 5 nm w
   where
     b = UA.bounds w
-    nm :: UA.Array Point [Int]
     nm = UA.array b (fmap f $ UA.assocs w)
       where f (p, c)
-              | isSeat c = (p, index b . fst <$> findSeats p)
+              | isSeat c  = (p, index b . fst <$> findSeats p)
               | otherwise = (p, [])
 
     findSeats p = catMaybes (findSeat <$> aroundD (0,0))
