@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE RankNTypes         #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell    #-}
 {-# Options_GHC -Wno-orphans #-}
@@ -26,8 +27,7 @@ instance NFData Dir where rnf = rwhnf
 instance NFData Action where rnf = rwhnf
 
 data Ship = Ship {
-  _shipDir    :: Dir
-  , _shipPos  :: Point
+  _shipPos    :: Point
   , _wayPoint :: Point
   } deriving Show
 
@@ -51,24 +51,19 @@ getInput = parseFile parseActions
 ntimes :: Int -> (a -> a) -> a -> a
 ntimes n f a = iterate f a !! n
 
-doit :: (Action -> Ship -> Ship) -> [Action] -> Int
-doit f = mdist2 (0,0) . _shipPos . foldl' (flip f) (Ship E (0,0) (10,1))
-
-part1 :: [Action] -> Int
-part1 = doit apply
+doit :: Lens' Ship Point -> Ship -> [Action] -> Int
+doit ml inship = mdist2 (0,0) . _shipPos . foldl' (flip apply) inship
   where
-    apply (MoveDir dir amt) = shipPos %~ fwdBy amt dir
-    apply (Forward amt)     = \s@Ship{_shipDir} -> s & shipPos %~ fwdBy amt _shipDir
-    apply (TurnLeft n)      = shipDir %~ ntimes n pred'
-    apply (TurnRight n)     = shipDir %~ ntimes n succ'
-
-part2 :: [Action] -> Int
-part2 = doit apply
-  where
-    apply (MoveDir dir amt) = wayPoint %~ fwdBy amt dir
+    apply (MoveDir dir amt) = ml %~ fwdBy amt dir
     apply (Forward amt)     = \s@Ship{_wayPoint} -> s & shipPos  %~ (addPoint . mulPoint (amt, amt)) _wayPoint
     apply (TurnLeft n)      = wayPoint %~ ntimes n rotateLeft
     apply (TurnRight n)     = wayPoint %~ ntimes n rotateRight
 
     rotateLeft (x,y) = (-y, x)
     rotateRight (x,y) = (y, -x)
+
+part1 :: [Action] -> Int
+part1 = doit shipPos (Ship (0,0) (1,0))
+
+part2 :: [Action] -> Int
+part2 = doit wayPoint (Ship (0,0) (10,1))
