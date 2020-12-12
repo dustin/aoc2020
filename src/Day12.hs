@@ -42,8 +42,11 @@ parseAction = parseDir <|> parseLeft <|> parseRight <|> parseForward
     parseRight = TurnRight <$> ("R" *> fmap (`div` 90) decimal)
     parseForward = Forward <$> ("F" *> decimal)
 
+parseActions :: Parser [Action]
+parseActions = parseAction `endBy` "\n"
+
 getInput :: FilePath -> IO [Action]
-getInput = parseFile (parseAction `endBy` "\n")
+getInput = parseFile parseActions
 
 ntimes :: Int -> (a -> a) -> a -> a
 ntimes n f a = iterate f a !! n
