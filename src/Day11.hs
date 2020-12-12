@@ -3,6 +3,7 @@
 
 module Day11 where
 
+import           Data.Array.Base    (unsafeAt)
 import qualified Data.Array.Unboxed as UA
 import           Data.Ix            (Ix (..))
 import qualified Data.Map.Strict    as Map
@@ -20,7 +21,7 @@ getInput = fmap (toArray . parseGrid id) . readFile
   where
     toArray m = UA.array (bounds2d m) (Map.assocs m)
 
-instance Bounded2D (UA.UArray Point Char) where
+instance Bounded2D World where
   bounds2d = UA.bounds
 
 drawMap :: World -> IO ()
@@ -28,11 +29,14 @@ drawMap w = putStrLn . drawString w $ (w UA.!)
 
 type WP = (World, Bool)
 
-move :: Int -> UA.Array Point [Point] -> WP -> WP
+type Neighbors = UA.Array Point [Int]
+
+move :: Int -> Neighbors -> WP -> WP
 move minSeat nm (w,_) = (w UA.// changes, (not.null) changes)
   where
     changes = foldMap f (UA.assocs w)
-    occd pos = w UA.! pos == '#'
+    occd :: Int -> Bool
+    occd pos = w `unsafeAt` pos == '#'
     f (pos, 'L')
       | any occd (nm UA.! pos) = [] -- no change
       | otherwise = [(pos, '#')]
@@ -48,9 +52,10 @@ isSeat _   = False
 part1 :: World -> Int
 part1 w = countIf (== '#') . UA.elems . stabilize (move 4 nm) $ w
   where
-    nm = UA.array (UA.bounds w) (fmap f $ UA.assocs w)
+    b = UA.bounds w
+    nm = UA.array b (fmap f $ UA.assocs w)
       where f (p, c)
-              | isSeat c = (p, filter inBounds . aroundD $ p)
+              | isSeat c = (p, fmap (index b) . filter inBounds . aroundD $ p)
               | otherwise = (p, [])
             inBounds = inRange (UA.bounds w)
 
@@ -60,9 +65,10 @@ stabilize m w = fst . head . dropWhile snd . iterate m $ (w,True)
 part2 :: World -> Int
 part2 w = countIf (== '#') . UA.elems . stabilize (move 5 nMap) $ w
   where
-    nMap = UA.array (UA.bounds w) (fmap f $ UA.assocs w)
+    b = UA.bounds w
+    nMap = UA.array b (fmap f $ UA.assocs w)
       where f (p, c)
-              | isSeat c = (p, fst <$> findSeats p)
+              | isSeat c = (p, index b . fst <$> findSeats p)
               | otherwise = (p, [])
 
     findSeats p = catMaybes (findSeat <$> aroundD (0,0))
