@@ -44,8 +44,9 @@ packages:
 extra-deps:
 - astar-0.3.0.0@sha256:8bf6350542e9db9451490e8993560ee843dc48a61d46a206985430f9b62461c8,967
 - git: https://github.com/dustin/aoc.git
-  commit: 8d75ac42f3647c5ae0b737381dc220f58451c371
+  commit: 1fc9644f92958da29332a8f00d30687a9f427616
 - criterion-1.5.9.0
+- js-chart-2.9.4.1@sha256:0f4bc23d19ac869ec0cbdbd7596a5074ba4be68e85fa5bb76a3bed559907b3bc,1802
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
