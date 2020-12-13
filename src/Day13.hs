@@ -6,7 +6,6 @@ module Day13 where
 
 import           Control.Applicative              ((<|>))
 import           Control.DeepSeq                  (NFData (..), rwhnf)
-import qualified Data.IntMap.Strict               as Map
 import           Data.Maybe                       (mapMaybe)
 import           Math.NumberTheory.Moduli.Chinese
 import           Text.Megaparsec                  (sepBy)
@@ -32,11 +31,8 @@ getInput = parseFile parseInput
 part1 :: Input Int -> Int
 part1 Input{..} = bid * waiting
   where
-    next Nothing  = Nothing
-    next (Just i) = let (q,r) = quotRem _earliest i in Just (q*i + if r == 0 then 0 else i, i)
-    buses = Map.fromList (mapMaybe next _buses)
-    Just (nt, bid) = Map.lookupGE _earliest buses
-    waiting = nt - _earliest
+    next i = (i - (_earliest `rem` i), i)
+    (waiting, bid) = minimum $ mapMaybe (fmap next) _buses
 
 part2 :: Input Integer -> Maybe Integer
 part2 Input{..} = chineseRemainder bs
