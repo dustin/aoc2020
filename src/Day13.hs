@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UnicodeSyntax     #-}
+{-# LANGUAGE LambdaCase #-}
 
 {-# Options_GHC -Wno-orphans #-}
 
@@ -8,7 +7,7 @@ module Day13 where
 import           Control.Applicative              ((<|>))
 import           Control.DeepSeq                  (NFData (..), rwhnf)
 import qualified Data.Map.Strict                  as Map
-import           Data.Maybe                       (catMaybes, mapMaybe)
+import           Data.Maybe                       (mapMaybe)
 import           Math.NumberTheory.Moduli.Chinese
 import           Text.Megaparsec                  (sepBy)
 import           Text.Megaparsec.Char.Lexer       (decimal)
@@ -33,8 +32,9 @@ getInput = parseFile parseInput
 part1 :: Input -> Integer
 part1 Input{..} = bid * waiting
   where
-    buses = Map.unions (expand <$> catMaybes _buses)
-    expand x = Map.fromList [(y, x) | y <- [x, x + x .. _earliest + (2*x)], y >= _earliest]
+    next Nothing  = Nothing
+    next (Just i) = let (q,r) = quotRem _earliest i in Just (q*i + if r == 0 then 0 else i, i)
+    buses = Map.fromList (mapMaybe next _buses)
     Just (nt, bid) = Map.lookupGE _earliest buses
     waiting = nt - _earliest
 
