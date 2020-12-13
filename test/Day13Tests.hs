@@ -20,10 +20,14 @@ testPart2ex = assertEqual "" (Just 1068781) . part2 =<< getInput "input/day13.ex
 testPart2 :: Assertion
 testPart2 = assertEqual "" (Just 500033211739354) . part2 =<< getInput "input/day13"
 
+testPart2ns :: Assertion
+testPart2ns = assertEqual "" 500033211739354 . part2ns =<< getInput "input/day13"
+
 tests :: [TestTree]
 tests = [
   testCase "part1ex" testPart1ex,
   testCase "part1" testPart1,
   testCase "part2ex" testPart2ex,
-  testCase "part2" testPart2
+  testCase "part2" testPart2,
+  testCase "part2ns" testPart2ns
   ]

@@ -47,9 +47,10 @@ part2 Input{..} = chineseRemainder bs
 
 -- nshepperd
 part2ns :: Input -> Integer
-part2ns Input{..} = go r1 rules
+part2ns Input{..} = go rules [0..]
   where
-    go (t0, _) [] = t0
-    go (t0, t1) ((dt,n):rs) = let a:b:_ = [t | t <- [t0,t1..], mod (t+dt) n == 0] in
-                                go (a,b) rs
-    (r1:rules) = [(dt, n) | (dt, Just n) <- zip [0..] _buses]
+    go [] ts     = head ts
+    go (r:rs) ts = go rs (accelerate (filter (solves r) ts))
+    solves (dt,n) t = mod (t+dt) n == 0
+    accelerate ts = let a:b:_ = ts in [a,b..]
+    rules = [(dt, n) | (dt, Just n) <- zip [0..] _buses]
