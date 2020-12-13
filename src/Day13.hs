@@ -1,7 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
-{-# Options_GHC -Wno-orphans #-}
-
 module Day13 where
 
 import           Control.Applicative              ((<|>))
@@ -10,7 +6,6 @@ import           Data.Maybe                       (mapMaybe)
 import           Math.NumberTheory.Moduli.Chinese
 import           Text.Megaparsec                  (sepBy)
 import           Text.Megaparsec.Char.Lexer       (decimal)
-
 
 import           Advent.AoC
 
