@@ -6,7 +6,7 @@ module Day13 where
 
 import           Control.Applicative              ((<|>))
 import           Control.DeepSeq                  (NFData (..), rwhnf)
-import qualified Data.Map.Strict                  as Map
+import qualified Data.IntMap.Strict               as Map
 import           Data.Maybe                       (mapMaybe)
 import           Math.NumberTheory.Moduli.Chinese
 import           Text.Megaparsec                  (sepBy)
@@ -15,21 +15,21 @@ import           Text.Megaparsec.Char.Lexer       (decimal)
 
 import           Advent.AoC
 
-data Input = Input {
-  _earliest :: Integer
-  , _buses  :: [Maybe Integer]
+data Input n = Input {
+  _earliest :: n
+  , _buses  :: [Maybe n]
   } deriving Show
 
-instance NFData Input where rnf = rwhnf
+instance NFData (Input a) where rnf = rwhnf
 
-parseInput :: Parser Input
+parseInput :: Num n => Parser (Input n)
 parseInput = Input <$> decimal <* "\n" <*> bus `sepBy` ","
   where bus = Nothing <$ "x" <|> Just <$> decimal
 
-getInput :: FilePath -> IO Input
+getInput :: Num n => FilePath -> IO (Input n)
 getInput = parseFile parseInput
 
-part1 :: Input -> Integer
+part1 :: Input Int -> Int
 part1 Input{..} = bid * waiting
   where
     next Nothing  = Nothing
@@ -38,7 +38,7 @@ part1 Input{..} = bid * waiting
     Just (nt, bid) = Map.lookupGE _earliest buses
     waiting = nt - _earliest
 
-part2 :: Input -> Maybe Integer
+part2 :: Input Integer -> Maybe Integer
 part2 Input{..} = chineseRemainder bs
   where
     bs = mapMaybe f (zip _buses [0..])
@@ -46,7 +46,7 @@ part2 Input{..} = chineseRemainder bs
     f _           = Nothing
 
 -- nshepperd
-part2ns :: Input -> Integer
+part2ns :: Input Integer -> Integer
 part2ns Input{..} = go rules [0..]
   where
     go [] ts     = head ts
