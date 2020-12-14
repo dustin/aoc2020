@@ -13,7 +13,7 @@ getInput :: FilePath -> IO Program
 getInput = readProgram
 
 part1 :: Program -> Either Int Int
-part1 =  first snd . loopOrTerminate
+part1 =  first _progAcc . loopOrTerminate
 
 part2 :: Program -> Maybe Int
 part2 = listToMaybe . rights . fmap loopOrTerminate . bruteforce

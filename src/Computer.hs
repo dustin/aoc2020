@@ -1,10 +1,13 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 
-module Computer (Operation(..), Program, ProgramState,
+module Computer (Operation(..), Program, ProgramState(..),
+                 progPC, progAcc,
                  readProgram, run, loopOrTerminate) where
 
 import           Control.Applicative        ((<|>))
 import           Control.DeepSeq            (NFData (..))
+import           Control.Lens
 import qualified Data.Set                   as Set
 import qualified Data.Vector                as V
 import           GHC.Generics               (Generic)
@@ -38,31 +41,38 @@ parseInstr = NOOP <$> intop "nop"
 readProgram :: FilePath -> IO Program
 readProgram = fmap V.fromList . parseFile (parseInstr `endBy` "\n")
 
--- | Program state is the PC and Accumulator value
-type ProgramState = (Int, Int)
+data ProgramState = ProgramState {
+  _progPC    :: Int
+  , _progAcc :: Int
+  } deriving (Show, Generic)
+
+makeLenses ''ProgramState
+
+emptyProgramState :: ProgramState
+emptyProgramState = ProgramState 0 0
 
 -- | evalStep executes a single instruction from a given state and returns the new state.
 -- A Left value indicates we've gone outside of program space (i.e., terminated?)
 -- A Right value indicates we may continue.
 evalStep :: Program -> Either ProgramState ProgramState -> Either ProgramState ProgramState
 evalStep _ l@(Left _) = l
-evalStep prog (Right st@(pc, acc)) = maybe (Left st) (Right . ex) (prog V.!? pc)
+evalStep prog (Right st@ProgramState{_progPC}) = maybe (Left st) (Right . ex) (prog V.!? _progPC)
   where
-    ex (NOOP _) = (pc+1, acc)
-    ex (ACC x)  = (pc+1, acc+x)
-    ex (JMP x)  = (pc+x, acc)
+    ex (NOOP _) = st & progPC +~ 1
+    ex (ACC x)  = st & progPC +~ 1 & progAcc +~ x
+    ex (JMP x)  = st & progPC +~ x
 
 -- | Run returns a continuous stream of program states from an initial state.
 run :: Program -> [Either ProgramState ProgramState]
-run prog = iterate (evalStep prog) (Right (0, 0))
+run prog = iterate (evalStep prog) (Right emptyProgramState)
 
 -- | loopOrTerminate returns either a Left program state at a the
 -- point *before* a loop occurs, or the Right final accumulator state.
 loopOrTerminate :: Program -> Either ProgramState Int
-loopOrTerminate = fmap snd . f mempty . run
+loopOrTerminate = fmap _progAcc . f mempty . run
   where
     f _ (r@(Right _):(Left _):_) = r            -- normal termination
-    f s (Right (opc,_):n@(Right (npc, x)):xs)
-      | npc `Set.member` s = Left (opc, x)      -- looped
+    f s (Right (ProgramState{_progPC=opc}):n@(Right (np@ProgramState{_progPC=npc}) ):xs)
+      | npc `Set.member` s = Left (np{_progPC=opc})      -- looped
       | otherwise = f (Set.insert npc s) (n:xs)
     f _ _ = error "impossible"
