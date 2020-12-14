@@ -39,7 +39,7 @@ parseMask = do
   _ <- "mask = "
   rawMask <- some (satisfy (`elem` ['X', '0', '1']))
   let (z,o) = masks rawMask
-      xes = masks <$> traverse (\case 'X' -> "01"; x -> [x]) (map (\case '0' -> 'N'; x -> x) rawMask)
+      xes = masks <$> traverse (\case 'X' -> "01"; '0' -> "."; x -> [x]) rawMask
   pure $ Mask (z, o) xes
 
   where
