@@ -1,5 +1,6 @@
 module Day14Tests where
 
+import           Data.Bits             (complement)
 import           Test.QuickCheck
 import           Test.Tasty
 import           Test.Tasty.Golden
@@ -18,7 +19,7 @@ testPart2ex :: Assertion
 testPart2ex = assertEqual "" 208 . part2 =<< getInput "input/day14.ex2"
 
 testMask :: Assertion
-testMask = assertEqual "" 73 (applyMask (2, 64) 11)
+testMask = assertEqual "" 73 (applyMask (complement 2, 64) 11)
 
 tests :: [TestTree]
 tests = [

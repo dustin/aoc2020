@@ -45,11 +45,11 @@ parseMask = do
   pure $ Mask (z, o) xes
 
   where
-    masks r = (mkmask '0' r, mkmask '1' r)
+    masks r = (complement (mkmask '0' r), mkmask '1' r)
     mkmask c = foldl' (\o' x -> o' * 2 + if x == c then 1 else 0) 0
 
 applyMask :: BitMask -> WordType -> WordType
-applyMask !(!z, !o) w = w .&. complement z .|. o
+applyMask !(!z, !o) w = w .&. z .|. o
 
 part1 :: Program -> WordType
 part1 = sum . run mempty (0, 0)
