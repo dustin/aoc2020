@@ -65,4 +65,4 @@ part2 = sum . run mempty mempty
     run :: IntMap WordType -> [BitMask] -> [Manipulation] -> IntMap WordType
     run s _ []               = s
     run s _ (Mask _ ms:xs)   = run s ms xs
-    run s masks (Mem i w:xs) = run (foldr (\x o -> IntMap.insert (applyMask x i) w o) s masks) masks xs
+    run s masks (Mem i w:xs) = run (foldMap (\m -> IntMap.singleton (applyMask m i) w) masks <> s) masks xs
