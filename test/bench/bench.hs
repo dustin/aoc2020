@@ -7,6 +7,7 @@ import qualified Day10Bench
 import qualified Day11Bench
 import qualified Day12Bench
 import qualified Day13Bench
+import qualified Day14Bench
 import qualified Day1Bench
 import qualified Day2Bench
 import qualified Day3Bench
@@ -31,5 +32,6 @@ main = defaultMain [
   bgroup "day10" Day10Bench.tests,
   bgroup "day11" Day11Bench.tests,
   bgroup "day12" Day12Bench.tests,
-  bgroup "day13" Day13Bench.tests
+  bgroup "day13" Day13Bench.tests,
+  bgroup "day14" Day14Bench.tests
   ]
