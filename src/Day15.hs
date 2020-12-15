@@ -2,6 +2,7 @@
 
 module Day15 where
 
+import           Control.Monad               (foldM)
 import           Control.Monad.ST
 import           Data.Foldable               (traverse_)
 import qualified Data.IntMap.Strict          as IntMap
@@ -30,16 +31,11 @@ game' inp = inp <> (fmap snd3 . iterate next) start
 gamenst :: Int -> [Int] -> Int
 gamenst nth inp = runST $ do
   prevs <- MV.replicate nth (-1)
-  traverse_ (\(x,p) -> MV.write prevs x p) (zip inp [1..])
-  solve prevs
-
-  where solve prevs = go (length inp + 1) 0
-          where go !pos !n
-                  | pos == nth = pure n
-                  | otherwise = do
-                      p <- MV.unsafeRead prevs n
-                      MV.unsafeWrite prevs n pos
-                      go (pos + 1) (pos - if p == -1 then pos else p)
+  traverse_ (uncurry (MV.write prevs)) (zip inp [1..])
+  foldM (\n pos -> do
+            p <- MV.unsafeRead prevs n
+            MV.unsafeWrite prevs n pos
+            pure (pos - if p == -1 then pos else p)) 0 [length inp + 1 .. nth - 1]
 
 gamen :: Int -> [Int] -> Int
 gamen nth = (!! pred nth) . game
