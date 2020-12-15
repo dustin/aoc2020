@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE LambdaCase   #-}
 
 module Day15 where
 
@@ -32,10 +33,8 @@ gamenst :: Int -> [Int] -> Int
 gamenst nth inp = runST $ do
   prevs <- MV.replicate nth (-1)
   traverse_ (uncurry (MV.write prevs)) (zip inp [1..])
-  foldM (\n pos -> do
-            p <- MV.unsafeRead prevs n
-            MV.unsafeWrite prevs n pos
-            pure (pos - if p == -1 then pos else p)) 0 [length inp + 1 .. nth - 1]
+  foldM (\n pos -> (\case -1 -> 0; p -> pos - p) <$> rw prevs n pos) 0 [length inp + 1 .. nth - 1]
+  where rw mv k v = MV.unsafeRead mv k <* MV.unsafeWrite mv k v
 
 gamen :: Int -> [Int] -> Int
 gamen nth = (!! pred nth) . game
