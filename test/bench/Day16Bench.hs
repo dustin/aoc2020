@@ -13,6 +13,7 @@ tests = [
   env (TIO.readFile "input/day16") $ \x -> bench "parsing" $ nf (parseLit parseInput) x,
   env (getInput "input/day16") $ \ ~x -> bgroup "" [
       bench "part1" $ nf part1 x,
+      bench "arrange" $ nf validArrangements x,
       bench "part2" $ nf part2 x
       ]
   ]
