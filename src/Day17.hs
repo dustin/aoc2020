@@ -5,7 +5,6 @@ import           Data.Set        (Set)
 import qualified Data.Set        as Set
 
 import           Advent.AoC
-import           Advent.Search
 
 type Point3 = (Int,Int,Int)
 
@@ -21,14 +20,11 @@ getInput :: FilePath -> IO World
 getInput fn = Set.map (\(x,y) -> (x,y,0)) . Map.keysSet . Map.filter id . parseGrid (== '#') <$> readFile fn
 
 play :: Ord k => (k -> [k]) -> Set k -> Set k
-play ex w = foldMap mf $ relevant w
+play ex w = keep <> new
   where
-    mf p
-      | at p = let n = countp p in if n == 2 || n == 3 then Set.singleton p else mempty
-      | otherwise = if countp p == 3 then Set.singleton p else mempty
-    countp p = countIf id (at <$> ex p)
-    at p = Set.member p w
-    relevant = Set.fromList . foldMap ex
+    counts = Map.fromListWith (+) [(k,1::Int) | k <- foldMap ex w]
+    keep = Map.keysSet . Map.filter (\n -> n == 2 || n == 3) $ counts `Map.restrictKeys` w
+    new = Map.keysSet . Map.filter (== 3) $ counts `Map.withoutKeys` w
 
 type Point4 = (Int, Int, Int, Int)
 
