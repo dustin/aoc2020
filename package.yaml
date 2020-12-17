@@ -53,6 +53,9 @@ default-extensions:
   - OverloadedStrings
   - RecordWildCards
   - NamedFieldPuns
+  - TupleSections
+  - BangPatterns
+  - LambdaCase
 
 executables:
   aoc2020:

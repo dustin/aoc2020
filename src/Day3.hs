@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Day3 where
 
 import           Data.Coerce     (coerce)

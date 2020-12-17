@@ -1,5 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-
 module Search where
 
 import           Data.Foldable      (toList)

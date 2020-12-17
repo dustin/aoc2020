@@ -1,6 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE LambdaCase   #-}
-
 module Day15 where
 
 import           Control.Monad               (foldM)

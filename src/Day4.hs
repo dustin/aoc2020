@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns    #-}
 

@@ -1,6 +1,4 @@
-{-# LANGUAGE TupleSections    #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ViewPatterns     #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Day10 where
 

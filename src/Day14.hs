@@ -1,6 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE LambdaCase   #-}
-
 module Day14 where
 
 import           Control.Applicative        (liftA2, (<|>))
