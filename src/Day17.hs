@@ -1,7 +1,7 @@
 module Day17 where
 
-import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import           Data.Set        (Set)
 import qualified Data.Set        as Set
 
 import           Advent.AoC
@@ -9,7 +9,7 @@ import           Advent.Search
 
 type Point3 = (Int,Int,Int)
 
-type World = Map Point3 Bool
+type World = Set Point3
 
 around3 :: Point3 -> [Point3]
 around3 input@(x,y,z) = [(x+xo, y+yo, z+zo)
@@ -18,17 +18,17 @@ around3 input@(x,y,z) = [(x+xo, y+yo, z+zo)
   where offs = [-1, 0, 1]
 
 getInput :: FilePath -> IO World
-getInput fn = Map.mapKeys (\(x,y) -> (x,y,0)) . parseGrid (== '#') <$> readFile fn
+getInput fn = Set.map (\(x,y) -> (x,y,0)) . Map.keysSet . Map.filter id . parseGrid (== '#') <$> readFile fn
 
-play :: Ord k => (k -> [k]) -> Map k Bool -> Map k Bool
-play ex w = Map.fromList . fmap mf $ relevant w
+play :: Ord k => (k -> [k]) -> Set k -> Set k
+play ex w = foldMap mf $ relevant w
   where
-    mf p = modf (p, at p)
-    modf (p, False) = (\n -> (p, n == 3)) $ countIf id (at <$> ex p)
-    modf (p, True)  = (\n -> (p, n == 2 || n == 3)) $ countIf id (at <$> ex p)
-    at p = Map.findWithDefault False p w
-
-    relevant = Set.toList . Set.fromList . foldMap ex . Map.keys . Map.filter id
+    mf p
+      | at p = let n = countp p in if n == 2 || n == 3 then Set.singleton p else mempty
+      | otherwise = if countp p == 3 then Set.singleton p else mempty
+    countp p = countIf id (at <$> ex p)
+    at p = Set.member p w
+    relevant = Set.fromList . foldMap ex
 
 type Point4 = (Int, Int, Int, Int)
 
@@ -39,7 +39,7 @@ around4 input@(x,y,z,t) = [(x+xo, y+yo, z+zo, t+to)
   where offs = [-1, 0, 1]
 
 part1 :: World -> Int
-part1 = countIf id . Map.elems . (!! 6) . iterate (play around3)
+part1 = Set.size . (!! 6) . iterate (play around3)
 
 part2 :: World -> Int
-part2 = countIf id . Map.elems . (!! 6) . iterate (play around4) . Map.mapKeys (\(x,y,z) -> (x,y,z,0))
+part2 = Set.size . (!! 6) . iterate (play around4) . Set.map (\(x,y,z) -> (x,y,z,0))
