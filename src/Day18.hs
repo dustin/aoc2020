@@ -14,13 +14,13 @@ import qualified Text.Megaparsec.Char.Lexer     as L
 import           Advent.AoC
 
 data Expression n where
-  EVal :: n -> Expression n
-  EFun :: (String, n -> n -> n) -> (Expression n, Expression n) -> Expression n
+  EVal :: !n -> Expression n
+  EFun :: (String, n -> n -> n) -> !(Expression n, Expression n) -> Expression n
 
 instance NFData (Expression n) where rnf = rwhnf
 
-type Ops n = [[Operator Parser (Expression n)]]
-
+-- Fancy Show instance of expressions that turn them into expressions
+-- as would be evaluated (or can be parsed again).
 instance Show n => Show (Expression n) where
   show (EVal x) = show x
   show e@(EFun _ _) = sx e
@@ -29,9 +29,11 @@ instance Show n => Show (Expression n) where
           sx (EVal x)              = show x
           sx (EFun (fn,_) (ea,eb)) = inner ea <> fn <> inner eb
 
-parseExpr :: Num n => [[Operator Parser (Expression n)]] -> Parser (Expression n)
+type Ops n = [[Operator Parser (Expression n)]]
+
+parseExpr :: Num n => Ops n -> Parser (Expression n)
 parseExpr ops = makeExprParser term ops
-  where term = parens (parseExpr ops) <|> EVal <$> L.lexeme hspace L.decimal
+  where term = parens (parseExpr ops) <|> EVal <$> lexeme L.decimal
         parens = lexeme . between "(" ")"
         lexeme = L.lexeme hspace
 
@@ -47,12 +49,12 @@ plusFirst = sequenceA flat
 parseExprs :: Num n => Ops n -> Parser [Expression n]
 parseExprs o = parseExpr o `endBy` "\n"
 
-getInput :: Num n => Ops n -> FilePath -> IO [Expression n]
-getInput o = parseFile (parseExprs o)
-
 evalExpr :: Num n => Expression n -> n
 evalExpr (EVal v)             = v
 evalExpr (EFun (_,f) (ea,eb)) = evalExpr ea `f` evalExpr eb
+
+getInput :: Num n => Ops n -> FilePath -> IO [Expression n]
+getInput o = parseFile (parseExprs o)
 
 part1 :: [Expression (Sum Int)] -> Int
 part1 = getSum . foldMap evalExpr
