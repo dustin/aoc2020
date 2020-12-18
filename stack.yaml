@@ -47,6 +47,7 @@ extra-deps:
   commit: 7a1a5a383196faaa738149c10c30a8f8f0c0e611
 - criterion-1.5.9.0
 - js-chart-2.9.4.1@sha256:0f4bc23d19ac869ec0cbdbd7596a5074ba4be68e85fa5bb76a3bed559907b3bc,1802
+- megaparsec-9.0.1
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

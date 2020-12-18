@@ -36,6 +36,13 @@ packages:
       sha256: 39a4777beb58727effeccb14d9f58f3d391446d035aefd30dd5eafe2a31b8ead
   original:
     hackage: js-chart-2.9.4.1@sha256:0f4bc23d19ac869ec0cbdbd7596a5074ba4be68e85fa5bb76a3bed559907b3bc,1802
+- completed:
+    hackage: megaparsec-9.0.1@sha256:b0d7cd8843af2687b1a5a4add523836c782c400a375e4d7b6989a827b5605ac6,3117
+    pantry-tree:
+      size: 1447
+      sha256: 9ea2dcce3affdb192ad460d4e5311a5cd2ece070d331f1edae9302b9302988be
+  original:
+    hackage: megaparsec-9.0.1
 snapshots:
 - completed:
     size: 532832
