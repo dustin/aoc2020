@@ -4,6 +4,7 @@ module Day20 where
 
 import           Control.Applicative        (liftA2)
 import           Control.DeepSeq            (NFData (..), rwhnf)
+import           Data.List                  (transpose)
 import           Data.Map.Strict            (Map)
 import qualified Data.Map.Strict            as Map
 import           Data.Set                   (Set)
@@ -38,6 +39,9 @@ sideMap inp = Map.unionsWith (<>) (edgesFor <$> te)
     edgesFor t@Tile{..} = Map.fromListWith (<>) [(e, Set.singleton _tileNum) | a <- arrangements t, e <- edga a]
     edga (Tile _ (a,b,c,d)) = [a,b,c,d]
     te = (fmap.fmap) sides inp
+    arrangements t = (Set.toList . Set.fromList) $ (<$> t) <$> (liftA2 (.) flips rotations)
+      where flips = [flipEdgesX, flipEdgesY, flipEdgesX . flipEdgesY, flipEdgesY . flipEdgesX]
+            rotations = (\n -> ntimes n rotateEdges) <$> [0..3]
 
 type MapEdge = String
 
@@ -50,28 +54,32 @@ sides f = (head <$> f,
            last <$> f,
            last f)
 
-rotate :: MapEdges -> MapEdges
-rotate (a,b,c,d) = (b,c,d,a)
+flipFragX :: Fragment -> Fragment
+flipFragX = fmap reverse
 
-flipX :: MapEdges -> MapEdges
-flipX (a,b,c,d) = (a, reverse b, c, reverse d)
+flipFragY :: Fragment -> Fragment
+flipFragY = reverse
 
-flipY :: MapEdges -> MapEdges
-flipY (a,b,c,d) = (reverse a, b, reverse c, d)
+rotateFrag :: Fragment -> Fragment
+rotateFrag = reverse . transpose
+
+rotateEdges :: MapEdges -> MapEdges
+rotateEdges (a,b,c,d) = (reverse b, c, reverse d, a)
+
+flipEdgesX :: MapEdges -> MapEdges
+flipEdgesX (a,b,c,d) = (c, reverse b, a, reverse d)
+
+flipEdgesY :: MapEdges -> MapEdges
+flipEdgesY (a,b,c,d) = (reverse a, d, reverse c, b)
 
 fitsL :: MapEdges -> MapEdges -> Bool
-fitsL (_, l, _, _) (r, _, _, _) = l == r
+fitsL (_, _, l, _) (r, _, _, _) = l == r
 
 fitsT :: MapEdges -> MapEdges -> Bool
 fitsT (_, _, _, t) (_, b, _, _) = t == b
 
 ntimes :: Int -> (a -> a) -> a -> a
 ntimes n f a = iterate f a !! n
-
-arrangements :: Tile MapEdges -> [Tile MapEdges]
-arrangements t = (Set.toList . Set.fromList) $ (<$> t) <$> (liftA2 (.) flips rotations)
-  where flips = [flipX, flipY, flipX . flipY, flipY . flipX]
-        rotations = (\n -> ntimes n rotate) <$> [0..3]
 
 flipMap :: Ord b => Map a b -> Map b [a]
 flipMap m = Map.fromListWith (<>) [(v,[k]) | (k,v) <- Map.assocs m]
