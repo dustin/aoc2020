@@ -12,10 +12,8 @@ import           Text.Megaparsec            (many, satisfy, some)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
-import           Advent.TwoD
-import           Advent.Vis
 
-type Fragment = Map Point Char
+type Fragment = [String]
 
 data Tile a = Tile {
   _tileNum    :: Int
@@ -28,8 +26,7 @@ parseTile :: Parser (Tile Fragment)
 parseTile = Tile <$> tileNum <*> aMap
   where
     tileNum = "Tile " *> L.decimal <* ":\n"
-    aMap = parseGrid id <$> chunk
-    chunk = many (satisfy (`elem` ['.', '#', '\n']))
+    aMap = filter (not.null) . lines <$> many (satisfy (`elem` ['.', '#', '\n']))
 
 getInput :: FilePath -> IO [Tile Fragment]
 getInput = parseFile (some parseTile)
@@ -48,12 +45,10 @@ type MapEdge = String
 type MapEdges = (MapEdge, MapEdge, MapEdge, MapEdge)
 
 sides :: Fragment -> MapEdges
-sides m = ([m Map.! (minx,y) | y <- [miny..maxy]],
-           [m Map.! (x,miny) | x <- [minx..maxx]],
-           [m Map.! (maxx,y) | y <- [miny..maxy]],
-           [m Map.! (x,maxy) | x <- [minx..maxx]])
-  where
-    ((minx,miny),(maxx,maxy)) = bounds2d m
+sides f = (head <$> f,
+           head f,
+           last <$> f,
+           last f)
 
 rotate :: MapEdges -> MapEdges
 rotate (a,b,c,d) = (b,c,d,a)
