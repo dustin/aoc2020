@@ -4,15 +4,20 @@ module Day20 where
 
 import           Control.Applicative        (liftA2)
 import           Control.DeepSeq            (NFData (..), rwhnf)
+import           Data.Foldable              (fold)
 import           Data.List                  (transpose)
 import           Data.Map.Strict            (Map)
 import qualified Data.Map.Strict            as Map
+import           Data.Maybe                 (catMaybes)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Text.Megaparsec            (many, satisfy, some)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
+import           Advent.Search
+import           Advent.TwoD
+import           Advent.Vis
 
 type Fragment = [String]
 
@@ -48,6 +53,18 @@ type MapEdge = String
 -- left, top, right, bottom
 type MapEdges = (MapEdge, MapEdge, MapEdge, MapEdge)
 
+leftSide :: (a,a,a,a) -> a
+leftSide (a,_,_,_) = a
+
+topSide :: (a,a,a,a) -> a
+topSide (_,a,_,_) = a
+
+rightSide :: (a,a,a,a) -> a
+rightSide (_,_,a,_) = a
+
+bottomSide :: (a,a,a,a) -> a
+bottomSide (_,_,_,a) = a
+
 sides :: Fragment -> MapEdges
 sides f = (head <$> f,
            head f,
@@ -63,6 +80,16 @@ flipFragY = reverse
 rotateFrag :: Fragment -> Fragment
 rotateFrag = reverse . transpose
 
+-- Find possible orientations of a Fragment based on a predicate
+orient :: (Fragment -> Bool) -> Fragment -> [Fragment]
+orient p = filter p . ars
+  where
+    ars f = Set.toList . Set.fromList $ (($f) <$> txs)
+      where
+        txs = liftA2 (.) flips rotations
+        flips = [flipFragX, flipFragY, flipFragX . flipFragY, flipFragY . flipFragX]
+        rotations = (\n -> ntimes n rotateFrag) <$> [0..3]
+
 rotateEdges :: MapEdges -> MapEdges
 rotateEdges (a,b,c,d) = (reverse b, c, reverse d, a)
 
@@ -72,11 +99,13 @@ flipEdgesX (a,b,c,d) = (c, reverse b, a, reverse d)
 flipEdgesY :: MapEdges -> MapEdges
 flipEdgesY (a,b,c,d) = (reverse a, d, reverse c, b)
 
-fitsL :: MapEdges -> MapEdges -> Bool
-fitsL (_, _, l, _) (r, _, _, _) = l == r
+fitsFL :: Fragment -> Fragment -> Bool
+fitsFL a b = fitsL (sides a) (sides b)
+  where fitsL (_, _, l, _) (r, _, _, _) = l == r
 
-fitsT :: MapEdges -> MapEdges -> Bool
-fitsT (_, _, _, t) (_, b, _, _) = t == b
+fitsFT :: Fragment -> Fragment -> Bool
+fitsFT a b = fitsT (sides a) (sides b)
+  where fitsT (_, _, _, t) (_, b', _, _) = t == b'
 
 ntimes :: Int -> (a -> a) -> a -> a
 ntimes n f a = iterate f a !! n
@@ -98,5 +127,65 @@ corners = (Map.! True) . flipMap . edges
 part1 :: [Tile Fragment] -> Int
 part1 = product . corners
 
+ftup :: (a -> b) -> (a, a, a, a) -> (b, b, b, b)
+ftup f (a,b,c,d) = (f a, f b, f c, f d)
+
+seaMonster :: Fragment
+seaMonster =[
+  "                  #",
+  "#    ##    ##    ###",
+  " #  #  #  #  #  #"]
+
+zipWith2D :: (x -> y -> a -> r) -> [x] -> [y] -> [[a]] -> [r]
+zipWith2D f xs ys = foldMap (\(y, l) -> zipWith (`f` y) xs l) . zip ys
+
+identifyMonsters :: Fragment -> ([Point], String)
+identifyMonsters fs = (identified, drawString replaceAll (replaceAll Map.!))
+  where
+    replaceAll = foldr (\x o -> Map.union (replace x) o) fraggrid identified
+    replace off = Map.fromList [(addPoint off k, 'O') | k <- replacer]
+    replacer = catMaybes . zipWith2D (\x y -> \case '#' -> Just (x,y); _ -> Nothing) [0..] [0..] $ seaMonster
+    identified = [(x,y) | x <- [0 .. maxx], y <- [0 .. maxy], matchAt fraggrid (x,y) monstermatch]
+    (_,(maxx,maxy)) = bounds2d fraggrid
+
+    fraggrid = gridify id fs
+    monstermatch = catMaybes . zipWith2D (\x y -> \case '#' -> Just ((x,y), (== '#')); _ -> Nothing) [0..] [0..] $ seaMonster
+    matchAt m off = foldr (\(k,f) o -> f (Map.findWithDefault '.' (addPoint off k) m) && o) True
+    gridify f = Map.fromList . zipWith2D (\x y a -> ((x,y), f a)) [0..] [0..]
+
+properOrder :: [Tile Fragment] -> [[Tile Fragment]]
+properOrder inp = order
+  where
+    fragMap = Map.fromList [(_tileNum, _tileFrag) | Tile{..} <- inp]
+    allSides = sideMap inp
+    c1 = (\x -> Tile x (fragMap Map.! x)) . head . Map.keys . Map.filter id . edges $ inp
+    neighborCount s = length (allSides Map.! s)
+    neighbors Tile{..} = fit . ftup (Set.toList . Set.delete _tileNum . (allSides Map.!)) . sides $ _tileFrag
+      where fit (_,_,[r],[b]) = (nbs fitsFL r, nbs fitsFT b)
+            fit (_,_,[r],[])  = (nbs fitsFL r, [])
+            fit x             = error ("oh no: " <> show x)
+
+            -- neighbors oriented to fit a particular way
+            nbs ff n = [Tile n x | x <- orient (ff _tileFrag) (fragMap Map.! n)]
+
+    rightOf = head . fst . neighbors
+    below = head . snd . neighbors
+
+    gridSize = ceiling . sqrt . fromIntegral . length $ inp
+
+    order = fmap (take gridSize . iterate rightOf) (take gridSize (iterate below firstCorner))
+
+    firstCorner = (head . orient suchThat) <$> c1
+      where suchThat c = neighborCount l == 1 && neighborCount t == 1
+              where (l,t,_,_) = sides c
+
+fullImage :: [[Tile Fragment]] -> Fragment
+fullImage order = foldMap (fmap fold . transpose) frags
+  where
+    erase1 l = tail (reverse (tail (reverse l)))
+    eraseBorder = fmap erase1 . erase1
+    unbordered = (fmap.fmap.fmap) eraseBorder order
+    frags = (fmap . fmap) _tileFrag $ unbordered
+
 part2 :: [Tile Fragment] -> Int
-part2 = const 0
+part2 = countIf (== '#') . snd . identifyMonsters . head . orient (not . null . fst . identifyMonsters) . fullImage . properOrder

@@ -14,7 +14,7 @@ testPart1 :: Assertion
 testPart1 = assertEqual "" 47213728755493 . part1 =<< getInput "input/day20"
 
 testPart2 :: Assertion
-testPart2 = assertEqual "" 0 . part2 =<< getInput "input/day20"
+testPart2 = assertEqual "" 1599 . part2 =<< getInput "input/day20"
 
 newtype AFrag = AFrag Fragment
   deriving (Show, Eq)
