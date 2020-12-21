@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ViewPatterns  #-}
 
 module Day20 where
 
@@ -37,6 +38,9 @@ parseTile = Tile <$> tileNum <*> aMap
 getInput :: FilePath -> IO [Tile Fragment]
 getInput = parseFile (some parseTile)
 
+dedup :: Ord a => [a] -> [a]
+dedup = Set.toList . Set.fromList
+
 sideMap :: [Tile Fragment] -> Map MapEdge (Set Int)
 sideMap inp = Map.unionsWith (<>) (edgesFor <$> te)
   where
@@ -44,7 +48,7 @@ sideMap inp = Map.unionsWith (<>) (edgesFor <$> te)
     edgesFor t@Tile{..} = Map.fromListWith (<>) [(e, Set.singleton _tileNum) | a <- arrangements t, e <- edga a]
     edga (Tile _ (a,b,c,d)) = [a,b,c,d]
     te = (fmap.fmap) sides inp
-    arrangements t = (Set.toList . Set.fromList) $ (<$> t) <$> (liftA2 (.) flips rotations)
+    arrangements t = dedup $ (<$> t) <$> (liftA2 (.) flips rotations)
       where flips = [flipEdgesX, flipEdgesY, flipEdgesX . flipEdgesY, flipEdgesY . flipEdgesX]
             rotations = (\n -> ntimes n rotateEdges) <$> [0..3]
 
@@ -72,7 +76,7 @@ rotateFrag = reverse . transpose
 orient :: (Fragment -> Maybe a) -> Fragment -> [(a, Fragment)]
 orient p = mapMaybe (\f -> p f >>= \v -> pure (v, f)) . ars
   where
-    ars f = Set.toList . Set.fromList $ (($f) <$> txs)
+    ars f = dedup $ (($f) <$> txs)
       where
         txs = liftA2 (.) flips rotations
         flips = [flipFragX, flipFragY, flipFragX . flipFragY, flipFragY . flipFragX]
@@ -136,19 +140,17 @@ identifyMonsters fs = listToMaybe identified *> pure (drawString replaceAll (rep
     gridify f = Map.fromList . zipWith2D (\x y a -> ((x,y), f a)) [0..] [0..]
 
 properOrder :: [Tile Fragment] -> [[Tile Fragment]]
-properOrder inp = order
+properOrder inp = take gridSize . iterate rightOf <$> take gridSize (iterate below firstCorner)
   where
     fragMap = Map.fromList [(_tileNum, _tileFrag) | Tile{..} <- inp]
     allSides = sideMap inp
-    -- Pick a corner to start filling from.
-    c1 = (\x -> Tile x (fragMap Map.! x)) . head . corners $ allSides
     neighborCount = length . (allSides Map.!)
     neighbors Tile{..} = fit . ftup4 (Set.toList . Set.delete _tileNum . (allSides Map.!)) . sides $ _tileFrag
       where fit (_,_,[r],[b]) = (nbs fitsFL r, nbs fitsFT b)
             fit (_,_,[r],[])  = (nbs fitsFL r, [])
             fit x             = error ("oh no: " <> show x)
 
-            -- neighbors oriented to fit a particular way
+            -- neighbors oriented to fit a particular way using a given fit function
             nbs ff n = [Tile n x | x <- orientB (ff _tileFrag) (fragMap Map.! n)]
 
     rightOf = head . fst . neighbors
@@ -156,11 +158,10 @@ properOrder inp = order
 
     gridSize = ceiling . sqrt . fromIntegral . length $ inp
 
-    order = fmap (take gridSize . iterate rightOf) (take gridSize (iterate below firstCorner))
-
-    firstCorner = (head . orientB suchThat) <$> c1
-      where suchThat c = neighborCount l == 1 && neighborCount t == 1
-              where (l,t,_,_) = sides c
+    -- Pick a corner to start filling from.
+    (c1:_)= corners allSides
+    firstCorner = (head . orientB suchThat) <$> Tile c1 (fragMap Map.! c1)
+      where suchThat (sides -> (l,t,_,_)) = neighborCount l == 1 && neighborCount t == 1
 
 fullImage :: [[Tile Fragment]] -> Fragment
 fullImage order = foldMap (fmap fold . transpose) frags
