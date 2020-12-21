@@ -53,18 +53,6 @@ type MapEdge = String
 -- left, top, right, bottom
 type MapEdges = (MapEdge, MapEdge, MapEdge, MapEdge)
 
-leftSide :: (a,a,a,a) -> a
-leftSide (a,_,_,_) = a
-
-topSide :: (a,a,a,a) -> a
-topSide (_,a,_,_) = a
-
-rightSide :: (a,a,a,a) -> a
-rightSide (_,_,a,_) = a
-
-bottomSide :: (a,a,a,a) -> a
-bottomSide (_,_,_,a) = a
-
 sides :: Fragment -> MapEdges
 sides f = (head <$> f,
            head f,
@@ -107,9 +95,6 @@ fitsFT :: Fragment -> Fragment -> Bool
 fitsFT a b = fitsT (sides a) (sides b)
   where fitsT (_, _, _, t) (_, b', _, _) = t == b'
 
-ntimes :: Int -> (a -> a) -> a -> a
-ntimes n f a = iterate f a !! n
-
 flipMap :: Ord b => Map a b -> Map b [a]
 flipMap m = Map.fromListWith (<>) [(v,[k]) | (k,v) <- Map.assocs m]
 
@@ -127,17 +112,11 @@ corners = (Map.! True) . flipMap . edges
 part1 :: [Tile Fragment] -> Int
 part1 = product . corners
 
-ftup :: (a -> b) -> (a, a, a, a) -> (b, b, b, b)
-ftup f (a,b,c,d) = (f a, f b, f c, f d)
-
 seaMonster :: Fragment
 seaMonster =[
   "                  #",
   "#    ##    ##    ###",
   " #  #  #  #  #  #"]
-
-zipWith2D :: (x -> y -> a -> r) -> [x] -> [y] -> [[a]] -> [r]
-zipWith2D f xs ys = foldMap (\(y, l) -> zipWith (`f` y) xs l) . zip ys
 
 identifyMonsters :: Fragment -> ([Point], String)
 identifyMonsters fs = (identified, drawString replaceAll (replaceAll Map.!))
@@ -160,7 +139,7 @@ properOrder inp = order
     allSides = sideMap inp
     c1 = (\x -> Tile x (fragMap Map.! x)) . head . Map.keys . Map.filter id . edges $ inp
     neighborCount s = length (allSides Map.! s)
-    neighbors Tile{..} = fit . ftup (Set.toList . Set.delete _tileNum . (allSides Map.!)) . sides $ _tileFrag
+    neighbors Tile{..} = fit . ftup4 (Set.toList . Set.delete _tileNum . (allSides Map.!)) . sides $ _tileFrag
       where fit (_,_,[r],[b]) = (nbs fitsFL r, nbs fitsFT b)
             fit (_,_,[r],[])  = (nbs fitsFL r, [])
             fit x             = error ("oh no: " <> show x)

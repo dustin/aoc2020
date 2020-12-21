@@ -17,11 +17,11 @@ packages:
     git: https://github.com/dustin/aoc.git
     pantry-tree:
       size: 1108
-      sha256: 7da5847972787b9270b2ee1e05b468506d30265f2b41215f2af98fc43cc1077a
-    commit: 7a1a5a383196faaa738149c10c30a8f8f0c0e611
+      sha256: 275892434e5ce202c32e5f05da6a75757a168fef1fe1ec69e93a3eda3e760408
+    commit: 58d54a3dd9f600574a03c22be86ab21f7e5452d0
   original:
     git: https://github.com/dustin/aoc.git
-    commit: 7a1a5a383196faaa738149c10c30a8f8f0c0e611
+    commit: 58d54a3dd9f600574a03c22be86ab21f7e5452d0
 - completed:
     hackage: criterion-1.5.9.0@sha256:a3446db6c8e0336777bc2ba5dcfc2bab1b086d012e98e519c9528e3d1682a671,5109
     pantry-tree:

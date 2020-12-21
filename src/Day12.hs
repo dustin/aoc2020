@@ -48,9 +48,6 @@ parseActions = parseAction `endBy` "\n"
 getInput :: FilePath -> IO [Action]
 getInput = parseFile parseActions
 
-ntimes :: Int -> (a -> a) -> a -> a
-ntimes n f a = iterate f a !! n
-
 doit :: Lens' Ship Point -> Ship -> [Action] -> Int
 doit ml inship = mdist2 (0,0) . _shipPos . foldl' (flip apply) inship
   where
