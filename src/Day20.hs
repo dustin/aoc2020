@@ -16,9 +16,7 @@ import           Text.Megaparsec            (many, satisfy, some)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
-import           Advent.Search
 import           Advent.TwoD
-import           Advent.Vis
 
 type Fragment = [String]
 
@@ -127,11 +125,11 @@ monstermatch :: [((Int, Int), Char -> Bool)]
 monstermatch = catMaybes . zipWith2D (\x y -> \case '#' -> Just ((x,y), (== '#'))
                                                     _   -> Nothing) [0..] [0..] $ seaMonster
 
-identifyMonsters :: Fragment -> Maybe String
-identifyMonsters fs = listToMaybe identified *> pure (drawString replaceAll (replaceAll Map.!))
+identifyMonsters :: Fragment -> Maybe Int
+identifyMonsters fs = listToMaybe identified *> pure (length (Map.filter (== '#') deleted))
   where
-    replaceAll = foldr (\x o -> Map.union (replace x) o) fraggrid identified
-    replace off = Map.fromList [(addPoint off k, 'O') | k <- fst <$> monstermatch]
+    deleted = fraggrid `Map.withoutKeys` deletions
+    deletions = Set.fromList [addPoint off k | off <- identified, (k,_) <- monstermatch]
     identified = [(x,y) | x <- [0 .. maxx - 20], y <- [0 .. maxy - 3], matchAt fraggrid (x,y) monstermatch]
     ((maxx,maxy),_) = Map.findMax fraggrid
 
@@ -172,4 +170,4 @@ fullImage order = foldMap (fmap fold . transpose) frags
     frags = (fmap . fmap) _tileFrag $ unbordered
 
 part2 :: [Tile Fragment] -> Int
-part2 = countIf (== '#') . fst . head . orient identifyMonsters . fullImage . properOrder
+part2 = fst . head . orient identifyMonsters . fullImage . properOrder
