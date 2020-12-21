@@ -8,7 +8,7 @@ import           Data.Foldable              (fold)
 import           Data.List                  (transpose)
 import           Data.Map.Strict            (Map)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes)
+import           Data.Maybe                 (catMaybes, listToMaybe, mapMaybe)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Text.Megaparsec            (many, satisfy, some)
@@ -69,14 +69,17 @@ rotateFrag :: Fragment -> Fragment
 rotateFrag = reverse . transpose
 
 -- Find possible orientations of a Fragment based on a predicate
-orient :: (Fragment -> Bool) -> Fragment -> [Fragment]
-orient p = filter p . ars
+orient :: (Fragment -> Maybe a) -> Fragment -> [(a, Fragment)]
+orient p = mapMaybe (\f -> p f >>= \v -> pure (v, f)) . ars
   where
     ars f = Set.toList . Set.fromList $ (($f) <$> txs)
       where
         txs = liftA2 (.) flips rotations
         flips = [flipFragX, flipFragY, flipFragX . flipFragY, flipFragY . flipFragX]
         rotations = (\n -> ntimes n rotateFrag) <$> [0..3]
+
+orientB :: (Fragment -> Bool) -> Fragment -> [Fragment]
+orientB f = fmap snd . orient (\x -> if f x then Just () else Nothing)
 
 rotateEdges :: MapEdges -> MapEdges
 rotateEdges (a,b,c,d) = (reverse b, c, reverse d, a)
@@ -98,19 +101,16 @@ fitsFT a b = fitsT (sides a) (sides b)
 flipMap :: Ord b => Map a b -> Map b [a]
 flipMap m = Map.fromListWith (<>) [(v,[k]) | (k,v) <- Map.assocs m]
 
--- Map of all of the tiles that belong on the edges (i.e., have at
--- least one side with no common border) to the True if a corner.
-edges :: [Tile Fragment] -> Map Int Bool
-edges = fmap (== 4)
-        . Map.fromListWith (+)
-        . foldMap (fmap (,1::Int) . Set.toList)
-        . Map.filter (\x -> Set.size x == 1) . sideMap
-
-corners :: [Tile Fragment] -> [Int]
-corners = (Map.! True) . flipMap . edges
+corners :: Map MapEdge (Set Int) -> [Int]
+corners = (Map.! True)
+          . flipMap
+          . fmap (== 4)
+          . Map.fromListWith (+)
+          . foldMap (fmap (,1::Int) . Set.toList)
+          . Map.filter (\x -> Set.size x == 1)
 
 part1 :: [Tile Fragment] -> Int
-part1 = product . corners
+part1 = product . corners . sideMap
 
 seaMonster :: Fragment
 seaMonster =[
@@ -118,17 +118,20 @@ seaMonster =[
   "#    ##    ##    ###",
   " #  #  #  #  #  #"]
 
-identifyMonsters :: Fragment -> ([Point], String)
-identifyMonsters fs = (identified, drawString replaceAll (replaceAll Map.!))
+-- We do the match.  If all positions listed here return true, we've found a monster.
+monstermatch :: [((Int, Int), Char -> Bool)]
+monstermatch = catMaybes . zipWith2D (\x y -> \case '#' -> Just ((x,y), (== '#'))
+                                                    _   -> Nothing) [0..] [0..] $ seaMonster
+
+identifyMonsters :: Fragment -> Maybe String
+identifyMonsters fs = listToMaybe identified *> pure (drawString replaceAll (replaceAll Map.!))
   where
     replaceAll = foldr (\x o -> Map.union (replace x) o) fraggrid identified
-    replace off = Map.fromList [(addPoint off k, 'O') | k <- replacer]
-    replacer = catMaybes . zipWith2D (\x y -> \case '#' -> Just (x,y); _ -> Nothing) [0..] [0..] $ seaMonster
-    identified = [(x,y) | x <- [0 .. maxx], y <- [0 .. maxy], matchAt fraggrid (x,y) monstermatch]
-    (_,(maxx,maxy)) = bounds2d fraggrid
+    replace off = Map.fromList [(addPoint off k, 'O') | k <- fst <$> monstermatch]
+    identified = [(x,y) | x <- [0 .. maxx - 20], y <- [0 .. maxy - 3], matchAt fraggrid (x,y) monstermatch]
+    ((maxx,maxy),_) = Map.findMax fraggrid
 
     fraggrid = gridify id fs
-    monstermatch = catMaybes . zipWith2D (\x y -> \case '#' -> Just ((x,y), (== '#')); _ -> Nothing) [0..] [0..] $ seaMonster
     matchAt m off = foldr (\(k,f) o -> f (Map.findWithDefault '.' (addPoint off k) m) && o) True
     gridify f = Map.fromList . zipWith2D (\x y a -> ((x,y), f a)) [0..] [0..]
 
@@ -137,15 +140,16 @@ properOrder inp = order
   where
     fragMap = Map.fromList [(_tileNum, _tileFrag) | Tile{..} <- inp]
     allSides = sideMap inp
-    c1 = (\x -> Tile x (fragMap Map.! x)) . head . Map.keys . Map.filter id . edges $ inp
-    neighborCount s = length (allSides Map.! s)
+    -- Pick a corner to start filling from.
+    c1 = (\x -> Tile x (fragMap Map.! x)) . head . corners $ allSides
+    neighborCount = length . (allSides Map.!)
     neighbors Tile{..} = fit . ftup4 (Set.toList . Set.delete _tileNum . (allSides Map.!)) . sides $ _tileFrag
       where fit (_,_,[r],[b]) = (nbs fitsFL r, nbs fitsFT b)
             fit (_,_,[r],[])  = (nbs fitsFL r, [])
             fit x             = error ("oh no: " <> show x)
 
             -- neighbors oriented to fit a particular way
-            nbs ff n = [Tile n x | x <- orient (ff _tileFrag) (fragMap Map.! n)]
+            nbs ff n = [Tile n x | x <- orientB (ff _tileFrag) (fragMap Map.! n)]
 
     rightOf = head . fst . neighbors
     below = head . snd . neighbors
@@ -154,7 +158,7 @@ properOrder inp = order
 
     order = fmap (take gridSize . iterate rightOf) (take gridSize (iterate below firstCorner))
 
-    firstCorner = (head . orient suchThat) <$> c1
+    firstCorner = (head . orientB suchThat) <$> c1
       where suchThat c = neighborCount l == 1 && neighborCount t == 1
               where (l,t,_,_) = sides c
 
@@ -167,4 +171,4 @@ fullImage order = foldMap (fmap fold . transpose) frags
     frags = (fmap . fmap) _tileFrag $ unbordered
 
 part2 :: [Tile Fragment] -> Int
-part2 = countIf (== '#') . snd . identifyMonsters . head . orient (not . null . fst . identifyMonsters) . fullImage . properOrder
+part2 = countIf (== '#') . fst . head . orient identifyMonsters . fullImage . properOrder
