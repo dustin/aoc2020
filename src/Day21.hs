@@ -50,9 +50,9 @@ allergens inp = Map.mapWithKey check im
                                , a <- Set.toList _allergens]
 
 part1 :: [Item] -> Int
-part1 inp = counts
+part1 inp = counts inp
   where
-    counts = sum $ length . (`Set.intersection` noAlls) . _ingredients <$> inp
+    counts = sum . fmap (length . (`Set.intersection` noAlls) . _ingredients)
     noAlls = Map.keysSet . Map.filter null . allergens $ inp
 
 part2 :: [Item] -> Text
