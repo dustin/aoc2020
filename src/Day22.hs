@@ -4,13 +4,13 @@
 module Day22 where
 
 import           Control.Applicative        (liftA2)
-import           Data.Bits                  (shiftL, (.|.))
+import           Data.Bits                  (shiftL)
 import           Data.Foldable              (foldl', toList)
 import qualified Data.IntSet                as Set
 import           Data.Sequence              (Seq (..), (|>))
 import qualified Data.Sequence              as Seq
-import           Text.Megaparsec            (endBy)
-import           Text.Megaparsec.Char       (digitChar)
+import           Text.Megaparsec            (endBy, many)
+import           Text.Megaparsec.Char       (digitChar, space)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Advent.AoC
@@ -27,6 +27,10 @@ parseInput = liftA2 (,) (parsePlayer <* "\n") parsePlayer
 
 getInput :: FilePath -> IO Game
 getInput = parseFile parseInput
+
+-- For the "many" input where we're testing multiple games.
+getInputs :: FilePath -> IO [Game]
+getInputs = parseFile (many (L.lexeme space parseInput))
 
 play :: Bool -> Game -> (Player, Seq Int)
 play recurse = go mempty
