@@ -20,6 +20,6 @@ tests = [
   testCase "part1" testPart1,
   testCase "part2ex" $ testPart2For "input/day22.ex" 291,
   -- This fails with my simple/fast hand detection.
-  -- testCase "part2 (sim642)" $ testPart2For "input/day22.sim642" 32317,
+  testCase "part2 (sim642)" $ testPart2For "input/day22.sim642" 32317,
   testCase "part2" $ testPart2For "input/day22" 29177
   ]
