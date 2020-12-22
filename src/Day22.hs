@@ -10,6 +10,8 @@ import           Advent.AoC
 
 type Game = ([Int], [Int])
 
+data Player = Player1 | Player2 deriving (Show, Eq)
+
 parsePlayer :: Parser [Int]
 parsePlayer = ("Player " *> digitChar <* ":\n") *> (L.decimal `endBy` "\n")
 
@@ -19,46 +21,31 @@ parseInput = liftA2 (,) (parsePlayer <* "\n") parsePlayer
 getInput :: FilePath -> IO Game
 getInput = parseFile parseInput
 
-play :: Game -> Either (Int,[Int]) Game
-play ([], p2) = Left (2, p2)
-play (p1, []) = Left (1, p1)
-play (p1:p1s, p2:p2s)
-  | p1 > p2 = Right (p1s <> [p1,p2], p2s)
-  | p2 > p1 = Right (p1s, p2s <> [p2,p1])
-  | otherwise = error "tie"
-
-type PlayFun a = Game -> Either (Int, [Int]) Game
-
-playOut :: PlayFun a -> Game -> Either (Int,[Int]) Game
-playOut pf = go
-  where go hands = pf hands >>= go
-
-score :: [Int] -> Int
-score = sum . zipWith (*) [1..] . reverse
-
-part1 :: Game -> Int
-part1 = either (score . snd) (const 0) . playOut play
-
-play2 :: Game -> Either (Int,[Int]) Game
-play2 = go mempty
+play :: Bool -> Game -> (Player, [Int])
+play recurse = go mempty
   where
-    go _ ([], p2) = Left (2, p2)
-    go _ (p1, []) = Left (1, p1)
-    go s (a@(p1:p1s), b@(p2:p2s))
-      | Set.member (a,b) s = Left (1,[])
-      | length p1s >= p1 && length p2s >= p2 =
+    go _ (p1, []) = (Player1, p1)
+    go _ ([], p2) = (Player2, p2)
+    go s (p1:p1s, p2:p2s)
+      | Set.member sk s = (Player1, [])
+      | recurse && length p1s >= p1 && length p2s >= p2 =
           case go mempty ((take p1 p1s), (take p2 p2s)) of
-            Left (1,_) -> go s' awin
-            Left (2,_) -> go s' bwin
-            _          -> error "wtf"
+            (Player1,_) -> go s' awin
+            (Player2,_) -> go s' bwin
       | p1 > p2 = go s' awin
       | p2 > p1 = go s' bwin
       | otherwise = error "tie"
 
       where awin = (p1s <> [p1,p2], p2s)
             bwin = (p1s, p2s <> [p2,p1])
-            s' = Set.insert (a,b) s
+            s' = Set.insert sk s
+            sk = (p1, last (p1:p1s), p2, last (p2:p2s))
 
+score :: [Int] -> Int
+score = sum . zipWith (*) [1..] . reverse
+
+part1 :: Game -> Int
+part1 = score . snd . play False
 
 part2 :: Game -> Int
-part2 = either (score.snd) (const 0) . play2
+part2 = score . snd . play True
