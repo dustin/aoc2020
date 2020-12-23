@@ -1,9 +1,8 @@
 module Day23 where
 
-import           Data.Char          (intToDigit)
-import           Data.IntMap.Strict (IntMap)
-import qualified Data.IntMap.Strict as Map
-import           Data.List          (unfoldr)
+import           Data.Char           (intToDigit)
+import           Data.List           (sort, unfoldr)
+import qualified Data.Vector.Unboxed as V
 
 import           Advent.AoC
 
@@ -13,25 +12,25 @@ cups = [1,3,5,4,6,8,7,2,9]
 data Game = Game {
   _maxn    :: Int
   , _pos   :: Int
-  , _poses :: IntMap Int
+  , _poses :: V.Vector Int
   } deriving Show
 
 mkGame :: [Int] -> Game
-mkGame l = Game (fst $ Map.findMax m) (head l) m
-  where m = Map.fromList (zip l (tail (cycle l)))
+mkGame l = Game (maximum l) (head l) m
+  where m = V.fromList (0: (snd <$> sort (zip l (tail (cycle l)))))
 
 walkFrom :: Game -> Int -> [Int]
-walkFrom Game{_poses} = unfoldr (\x -> Just (x, _poses Map.! x))
+walkFrom Game{_poses} = unfoldr (\x -> Just (x, _poses V.! x))
 
 play :: Game -> Game
-play g@Game{..} = g{_pos = _poses' Map.! _pos, _poses=_poses'}
+play g@Game{..} = g{_pos = _poses' V.! _pos, _poses=_poses'}
   where
     dest = guessSeq (_pos - 1)
-    next3 = take 3 (walkFrom g (_poses Map.! _pos))
+    next3 = take 3 (walkFrom g (_poses V.! _pos))
     d3last = last next3
-    d3next = _poses Map.! last next3
-    destPos = _poses Map.! dest
-    _poses' = Map.fromList [(_pos, d3next), (dest, head next3), (d3last, destPos)] <> _poses
+    d3next = _poses V.! last next3
+    destPos = _poses V.! dest
+    _poses' = _poses V.// [(_pos, d3next), (dest, head next3), (d3last, destPos)]
     guessSeq 0 = guessSeq _maxn
     guessSeq n
       | elem n next3 = guessSeq (n - 1)
