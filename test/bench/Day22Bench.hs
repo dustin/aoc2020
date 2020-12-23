@@ -11,7 +11,10 @@ tests :: [Benchmark]
 tests = [
   env (getInput "input/day22") $ \ ~x -> bgroup "" [
       bench "part1" $ nf part1 x,
-      bench "part2" $ nf part2 x
+      bench "part2" $ nf part2 x,
+      bench "optfirst" $ nf (snd . play optfirst True) x,
+      bench "optboth" $ nf (snd . play optboth True) x,
+      bench "optboth'" $ nf (snd . play optboth' True) x
       ]
   -- This is particularly interesting input.
   , env (getInput "input/day22.sim642") $ \ ~x -> bench "sim642" $ nf part2 x
