@@ -1,44 +1,52 @@
 module Day23 where
 
-import           Data.Char     (intToDigit)
-import           Data.Foldable (toList)
-import           Data.Maybe    (fromJust)
-import           Data.Sequence (Seq (..), (|>))
-import qualified Data.Sequence as Seq
+import           Data.Char          (intToDigit)
+import           Data.IntMap.Strict (IntMap)
+import qualified Data.IntMap.Strict as Map
+import           Data.List          (unfoldr)
 
 import           Advent.AoC
 
-cups :: Seq Int
-cups = Seq.fromList [1,3,5,4,6,8,7,2,9]
+cups :: [Int]
+cups = [1,3,5,4,6,8,7,2,9]
 
-play :: Int -> Seq Int -> Seq Int
-play maxn !(dest1 :<| xs) = (chop1 <> next3 <> chop2) |> dest1
-  where (next3, rest) = Seq.splitAt 3 xs
-        dest = guessSeq (dest1-1)
-        destPos = fromJust (Seq.elemIndexL dest rest) + 1
-        (chop1, chop2) = Seq.splitAt destPos rest
-        guessSeq 0 = guessSeq maxn
-        guessSeq n
-          | elem n next3 = guessSeq (n - 1)
-          | otherwise = n
+data Game = Game {
+  _maxn    :: Int
+  , _pos   :: Int
+  , _poses :: IntMap Int
+  } deriving Show
 
-label :: Seq Int -> String
-label cs = fmap intToDigit . toList $ wrapped
-  where pos = fromJust (Seq.elemIndexL 1 cs) + 1
-        pos' = if pos == length cs - 1 then 0 else pos
-        (a :|> _, b) = Seq.splitAt pos' cs
-        wrapped = b <> a
+mkGame :: [Int] -> Game
+mkGame l = Game (fst $ Map.findMax m) (head l) m
+  where m = Map.fromList (zip l (tail (cycle l)))
 
-part1 :: String
-part1 = label (ntimes 100 (play 9) cups)
+walkFrom :: Game -> Int -> [Int]
+walkFrom Game{_poses} = unfoldr (\x -> Just (x, _poses Map.! x))
 
-cups2 :: Seq Int
-cups2 = cups <> Seq.fromList [10..1000000]
+play :: Game -> Game
+play g@Game{..} = g{_pos = _poses' Map.! _pos, _poses=_poses'}
+  where
+    dest = guessSeq (_pos - 1)
+    next3 = take 3 (walkFrom g (_poses Map.! _pos))
+    d3last = last next3
+    d3next = _poses Map.! last next3
+    destPos = _poses Map.! dest
+    _poses' = Map.fromList [(_pos, d3next), (dest, head next3), (d3last, destPos)] <> _poses
+    guessSeq 0 = guessSeq _maxn
+    guessSeq n
+      | elem n next3 = guessSeq (n - 1)
+      | otherwise = n
+
+playn :: Int -> Game -> Game
+playn n = ntimes n play
+
+showGame :: Game -> [Int]
+showGame g@Game{..} = take 9 $ walkFrom g _pos
+
+part1 :: Int -> [Int] -> String
+part1 n = label . playn n . mkGame
+  where label g = fmap intToDigit . tail . take 9 $ walkFrom g 1
 
 part2 :: Int
-part2 = a * b
-  where
-    played = ntimes 10000000 (play 1000000) cups2
-    pos = fromJust (Seq.elemIndexL 1 played) + 1
-    a = Seq.index played pos
-    b = Seq.index played (pos+1)
+part2 = product . drop 1 . take 3 . walkFrom (ntimes 10000000 play g) $ 1
+  where g = mkGame (cups <> [10..1000000])
