@@ -5,6 +5,7 @@ import           Data.Set        (Set)
 import qualified Data.Set        as Set
 
 import           Advent.AoC
+import           Life
 
 type Point3 = (Int,Int,Int)
 
@@ -19,12 +20,11 @@ around3 input@(x,y,z) = [(x+xo, y+yo, z+zo)
 getInput :: FilePath -> IO World
 getInput fn = Set.map (\(x,y) -> (x,y,0)) . Map.keysSet . Map.filter id . parseGrid (== '#') <$> readFile fn
 
-play :: Ord k => (k -> [k]) -> Set k -> Set k
-play ex w = keep <> new
-  where
-    counts = Map.fromListWith (+) [(k,1::Int) | k <- foldMap ex w]
-    keep = Map.keysSet . Map.filter (\n -> n == 2 || n == 3) $ counts `Map.restrictKeys` w
-    new = Map.keysSet . Map.filter (== 3) $ counts `Map.withoutKeys` w
+keepRule, newRule :: Int -> Bool
+keepRule n = n == 2 || n == 3
+newRule  n = n == 3
+{-# INLINE keepRule #-}
+{-# INLINE newRule #-}
 
 type Point4 = (Int, Int, Int, Int)
 
@@ -35,7 +35,7 @@ around4 input@(x,y,z,t) = [(x+xo, y+yo, z+zo, t+to)
   where offs = [-1, 0, 1]
 
 part1 :: World -> Int
-part1 = Set.size . (!! 6) . iterate (play around3)
+part1 = Set.size . ntimes 6 (gameOfLife around3 keepRule newRule)
 
 part2 :: World -> Int
-part2 = Set.size . (!! 6) . iterate (play around4) . Set.map (\(x,y,z) -> (x,y,z,0))
+part2 = Set.size . ntimes 6 (gameOfLife around4 keepRule newRule) . Set.map (\(x,y,z) -> (x,y,z,0))

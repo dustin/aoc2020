@@ -10,6 +10,8 @@ import           Text.Megaparsec (endBy, many)
 import           Advent.AoC
 import           Advent.TwoD
 
+import           Life
+
 data Direction = East | SouthEast | SouthWest | West | NorthWest | NorthEast
   deriving (Show, Enum, Bounded)
 
@@ -46,12 +48,8 @@ blackTiles inp = Map.keysSet . Map.filter odd . Map.fromListWith (+) $ [(point,1
 part1 :: Input -> Int
 part1 = length . blackTiles
 
-play :: Ord k => (k -> [k]) -> Set k -> Set k
-play ex w = keep <> new
-  where
-    counts = Map.fromListWith (+) [(k,1::Int) | k <- foldMap ex w]
-    keep = Map.keysSet . Map.filter (\n -> n == 1 || n == 2) $ counts `Map.restrictKeys` w
-    new = Map.keysSet . Map.filter (== 2) $ counts `Map.withoutKeys` w
+play :: Set Point -> Set Point
+play = gameOfLife around6 (\n -> n == 1 || n == 2) (== 2)
 
 part2 :: Input -> Int
-part2 = length . ntimes 100 (play around6) . blackTiles
+part2 = length . ntimes 100 play . blackTiles
