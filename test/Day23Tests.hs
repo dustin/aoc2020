@@ -22,7 +22,7 @@ testPart1 = do
   assertEqual "my*100" "32897654" (part1 100 cups)
 
 testPart2 :: Assertion
-testPart2 = assertEqual "" 186715244496 part2
+testPart2 = assertEqual "" 186715244496 (part2 cups)
 
 tests :: [TestTree]
 tests = [
