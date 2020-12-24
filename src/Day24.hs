@@ -2,6 +2,7 @@ module Day24 where
 
 import           Control.Applicative ((<|>))
 
+import           Control.DeepSeq     (NFData (..), rwhnf)
 import           Data.Foldable       (fold)
 import           Data.Map.Strict     (Map)
 import qualified Data.Map.Strict     as Map
@@ -15,6 +16,8 @@ import           Advent.TwoD
 
 data Direction = East | SouthEast | SouthWest | West | NorthWest | NorthEast
   deriving (Show, Enum, Bounded)
+
+instance NFData Direction where rnf = rwhnf
 
 type Input = [[Direction]]
 
@@ -67,7 +70,7 @@ type Game = Set Point
 gol6 :: Game -> Game
 gol6 g = Set.fromList . foldMap (\p -> rules (Set.member p g) p) $ relevant
   where
-    relevant = Set.toList (g <> fold [ Set.fromList (around6 p) | p <- Set.toList g ])
+    relevant = fold [ Set.fromList (around6 p) | p <- Set.toList g ]
     rules True p  = let nc = ncount p in  if nc == 1 || nc == 2 then [p] else []
     rules False p = if ncount p == 2 then [p] else []
 
