@@ -4,10 +4,13 @@ import           Criterion (Benchmark, bench, bgroup, env, nf)
 
 import           Day23
 
+cupsEx :: [Int]
+cupsEx = [3,8,9,1,2,5,4,6,7]
+
 tests :: [Benchmark]
 tests = [
-  env (getInput "input/day23") $ \ ~x -> bgroup "" [
-      bench "part1" $ nf part1 x,
-      bench "part2" $ nf part2 x
-      ]
+  bench "part1 array" $ nf (take 9 . walkFrom 1 . play) (mkGame cupsEx),
+  bench "part1 array big" $ nf (take 9 . walkFrom 1 . play) (mkGame (cupsEx <> [10..1000000])),
+  bench "part1 (100 ex ST)" $ nf (part1 100) cupsEx,
+  bench "part2 (2,000,000 ex)" $ nf (part2 2000000) cupsEx
   ]

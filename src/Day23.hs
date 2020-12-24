@@ -84,5 +84,5 @@ part1 :: Int -> [Int] -> String
 part1 n = label . playnST n
   where label = fmap intToDigit . tail . take 9 . walkFrom 1
 
-part2 :: [Int] -> Int
-part2 = product . drop 1 . take 3 . walkFrom 1 . playnST 10000000 . (<>[10..1000000])
+part2 :: Int -> [Int] -> Int
+part2 n = product . drop 1 . take 3 . walkFrom 1 . playnST n . (<>[10..1000000])
