@@ -3,15 +3,12 @@ module Day24 where
 import           Control.Applicative ((<|>))
 
 import           Control.DeepSeq     (NFData (..), rwhnf)
-import           Data.Foldable       (fold)
 import           Data.Map.Strict     (Map)
 import qualified Data.Map.Strict     as Map
 import           Data.Set            (Set)
-import qualified Data.Set            as Set
 import           Text.Megaparsec     (endBy, many, try)
 
 import           Advent.AoC
-import           Advent.Search
 import           Advent.TwoD
 
 data Direction = East | SouthEast | SouthWest | West | NorthWest | NorthEast
@@ -67,15 +64,13 @@ part1 = length . flipTiles
 
 type Game = Set Point
 
-gol6 :: Game -> Game
-gol6 g = Set.fromList . foldMap (\p -> rules (Set.member p g) p) $ relevant
+play :: Ord k => (k -> [k]) -> Set k -> Set k
+play ex w = keep <> new
   where
-    relevant = fold [ Set.fromList (around6 p) | p <- Set.toList g ]
-    rules True p  = let nc = ncount p in  if nc == 1 || nc == 2 then [p] else []
-    rules False p = if ncount p == 2 then [p] else []
-
-    ncount = countIf (`Set.member` g) . around6
+    counts = Map.fromListWith (+) [(k,1::Int) | k <- foldMap ex w]
+    keep = Map.keysSet . Map.filter (\n -> n == 1 || n == 2) $ counts `Map.restrictKeys` w
+    new = Map.keysSet . Map.filter (== 2) $ counts `Map.withoutKeys` w
 
 part2 :: Input -> Int
-part2 inp = length (ntimes 100 gol6 g)
+part2 inp = length (ntimes 100 (play around6) g)
   where g = Map.keysSet . fmap (const Black) . Map.filter odd . countTiles $ inp
