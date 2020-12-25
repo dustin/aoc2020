@@ -29,7 +29,7 @@ move NorthWest (x,y) = (x, y-1)
 move NorthEast (x,y) = (x+1, y-1)
 
 around6 :: Point -> [Point]
-around6 p = [move d p | d <- [minBound .. maxBound]]
+around6 p = [move d p | d <- [minBound ..]]
 
 parseDirection :: Parser Direction
 parseDirection = asum ["e"  $> East, "se" $> SouthEast, "ne" $> NorthEast,
