@@ -3,7 +3,6 @@ module Day13 where
 import           Control.Applicative              ((<|>))
 import           Control.DeepSeq                  (NFData (..), rwhnf)
 import           Data.Maybe                       (mapMaybe)
-import           Math.NumberTheory.Moduli.Chinese
 import           Text.Megaparsec                  (sepBy)
 import           Text.Megaparsec.Char.Lexer       (decimal)
 
@@ -33,9 +32,6 @@ part1 Input{..} = bid * waiting
   where
     next i = (i - (_earliest `rem` i), i)
     (waiting, bid) = minimum $ fmap (next.snd) _buses
-
-part2 :: Input Integer -> Maybe Integer
-part2 Input{..} = chineseRemainder (fmap (\(n, x) -> (x-n, x)) _buses)
 
 -- nshepperd
 part2ns :: Input Integer -> Integer

@@ -16,12 +16,12 @@ packages:
     version: 0.1.0.0
     git: https://github.com/dustin/aoc.git
     pantry-tree:
-      size: 1108
-      sha256: 275892434e5ce202c32e5f05da6a75757a168fef1fe1ec69e93a3eda3e760408
-    commit: 58d54a3dd9f600574a03c22be86ab21f7e5452d0
+      size: 1179
+      sha256: b366272c3baa5a18a0d0f4221f63112d25ed9dfcb14113e49b001ecbc31dcbcc
+    commit: 60b4a01f9c09863d16833bcd766daf8855281d26
   original:
     git: https://github.com/dustin/aoc.git
-    commit: 58d54a3dd9f600574a03c22be86ab21f7e5452d0
+    commit: 60b4a01f9c09863d16833bcd766daf8855281d26
 - completed:
     hackage: criterion-1.5.9.0@sha256:a3446db6c8e0336777bc2ba5dcfc2bab1b086d012e98e519c9528e3d1682a671,5109
     pantry-tree:
@@ -43,10 +43,16 @@ packages:
       sha256: 9ea2dcce3affdb192ad460d4e5311a5cd2ece070d331f1edae9302b9302988be
   original:
     hackage: megaparsec-9.0.1
+- completed:
+    hackage: arithmoi-0.11.0.1@sha256:5cb0d81848d25b20e58c1426bf1ff9dc4137efc182c9c4c567102e5fa16f1079,7639
+    pantry-tree:
+      size: 10135
+      sha256: 411702e6277e708f7567b398b676cf75d38d12114f6b5932a895ce835b362b3d
+  original:
+    hackage: arithmoi-0.11.0.1@sha256:5cb0d81848d25b20e58c1426bf1ff9dc4137efc182c9c4c567102e5fa16f1079,7639
 snapshots:
 - completed:
-    size: 532832
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/23.yaml
-    sha256: fbb2a0519008533924c7753bd7164ddd1009f09504eb06674acad6049b46db09
-  original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/23.yaml
+    size: 586069
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/14.yaml
+    sha256: 87842ecbaa8ca9cee59a7e6be52369dbed82ed075cb4e0d152614a627e8fd488
+  original: lts-18.14
